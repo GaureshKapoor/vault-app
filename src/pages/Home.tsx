@@ -72,6 +72,7 @@ export default function Home() {
   const { toast } = useToast();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showArchived, setShowArchived] = useState(false);
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -276,6 +277,130 @@ export default function Home() {
     );
   }
 
+  const buildShareSummary = () => {
+    const dateLabel = new Date().toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    const filters: string[] = [];
+    filters.push(showArchived ? "View: Archived" : "View: Active");
+    if (selectedCategory !== "All") {
+      filters.push(`Category: ${selectedCategory}`);
+    }
+
+    const header = [
+      `Vault Ideas — ${dateLabel}`,
+      filters.length ? filters.join(" • ") : undefined,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const items = filteredIdeas
+      .map((idea, index) => {
+        const statusLabel = formatStatus(idea.status);
+        const aiScore = idea.ai_score ? `${idea.ai_score}` : "N/A";
+        const category = idea.category ?? "Uncategorized";
+        const updated = new Date(idea.updated_at).toLocaleDateString();
+        const details = [
+          `${index + 1}. ${idea.title ?? "Untitled idea"}`,
+          `   • Category: ${category}`,
+          `   • Status: ${statusLabel} | AI Score: ${aiScore}`,
+          `   • Last Edited: ${updated}`,
+        ];
+
+        if (idea.description) {
+          details.push(`   • Notes: ${idea.description}`);
+        }
+
+        return details.join("\n");
+      })
+      .join("\n\n");
+
+    return `${header}\n\n${items}`;
+  };
+
+  const buildCsvContent = () => {
+    const headers = ["Title", "Status", "Category", "AI Score", "Last Edited"];
+    const escapeCell = (value: string | number | null) => {
+      const safeValue = value ?? "";
+      return `"${String(safeValue).replace(/"/g, '""')}"`;
+    };
+
+    const rows = filteredIdeas.map((idea) => [
+      escapeCell(idea.title ?? ""),
+      escapeCell(formatStatus(idea.status)),
+      escapeCell(idea.category ?? "Uncategorized"),
+      escapeCell(idea.ai_score ?? "N/A"),
+      escapeCell(new Date(idea.updated_at).toLocaleDateString()),
+    ]);
+
+    return [headers.map((header) => `"${header}"`).join(","), ...rows.map((row) => row.join(","))].join("\n");
+  };
+
+  const handleShareIdeas = async () => {
+    if (!filteredIdeas.length) {
+      toast({
+        title: "Nothing to export",
+        description: "Try changing filters or add an idea first.",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+
+    const shareSummary = buildShareSummary();
+    const canUseWebShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+    if (canUseWebShare) {
+      try {
+        await navigator.share({
+          text: shareSummary,
+        });
+        toast({
+          title: "Shared",
+          description: "Idea list sent via the native share sheet.",
+        });
+        setIsExporting(false);
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          setIsExporting(false);
+          return;
+        }
+        console.warn("Web Share API failed, falling back to CSV export", error);
+      }
+    }
+
+    try {
+      const csv = buildCsvContent();
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `vault-ideas-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export ready",
+        description: "Downloaded CSV with your current list.",
+      });
+    } catch (error) {
+      console.error("Error exporting ideas:", error);
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: "Couldn't export ideas. Please try again.",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="bg-background">
       {/* Header */}
@@ -293,8 +418,18 @@ export default function Home() {
             </h1>
           </div>
           <div className="w-20 flex justify-end items-center gap-1">
-            <Button variant="ghost" size="icon">
-              <Share className="w-5 h-5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShareIdeas}
+              disabled={isExporting}
+              aria-label="Export or share idea list"
+            >
+              {isExporting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Share className="w-5 h-5" />
+              )}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

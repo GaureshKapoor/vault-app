@@ -49,6 +49,8 @@ interface Idea {
   check_simple_loop: boolean;
   check_deployable_mvp: boolean;
   is_template: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface IdeaNote {
@@ -116,6 +118,7 @@ export default function IdeaDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<Partial<Idea>>({});
+  const [isExporting, setIsExporting] = useState(false);
   
   // Track if this is the first navigation from onboarding
   const fromOnboarding = searchParams.get("fromOnboarding") === "true";
@@ -384,6 +387,120 @@ export default function IdeaDetail() {
   const isTemplate = idea.is_template;
   const canEdit = !isTemplate;
 
+  const buildIdeaExportSummary = () => {
+    if (!idea) return "";
+
+    const lastEdited = idea.updated_at
+      ? new Date(idea.updated_at).toLocaleString()
+      : "Unknown";
+    const createdAt = idea.created_at
+      ? new Date(idea.created_at).toLocaleDateString()
+      : "Unknown";
+
+    const evalLines = [
+      `Difficulty: ${idea.difficulty ?? "-"}`,
+      `Priority: ${idea.priority ?? "-"}`,
+      `Sprint Fit: ${idea.sprint_fit ?? "-"}`,
+    ].join(" | ");
+
+    const readiness = [
+      { label: "Clear Problem", value: idea.check_clear_problem },
+      { label: "Simple Loop", value: idea.check_simple_loop },
+      { label: "Deployable MVP", value: idea.check_deployable_mvp },
+    ]
+      .map((item) => `- ${item.label}: ${item.value ? "✅" : "⬜"}`)
+      .join("\n");
+
+    const sections = [
+      `Vault Idea — ${idea.title || "Untitled"}`,
+      "",
+      `${idea.category || "Uncategorized"} | Status: ${formatStatus(idea.status)} | AI Score: ${idea.ai_score ?? "N/A"}`,
+      `Last Edited: ${lastEdited} • Created: ${createdAt}`,
+      "",
+      idea.main_idea ? `Summary: ${idea.main_idea}` : undefined,
+      idea.description ? `Description: ${idea.description}` : undefined,
+      idea.main_idea || idea.description ? "" : undefined,
+      "Core Narrative",
+      "",
+      `• Problem: ${idea.core_problem || "Not defined"}`,
+      `• Value Proposition: ${idea.core_value_proposition || "Not defined"}`,
+      `• Core Loop: ${idea.core_loop || "Not defined"}`,
+      `• MVP Shape: ${idea.mvp_shape || "Not defined"}`,
+      `• Target User: ${idea.target_user || "Not defined"}`,
+      "",
+      "Evaluation",
+      "",
+      evalLines,
+      "",
+      "Readiness Checks",
+      "",
+      readiness,
+      idea.ai_reasoning ? `\nAI Reasoning:\n${idea.ai_reasoning}` : undefined,
+    ].filter(Boolean);
+
+    if (notes.length) {
+      sections.push("", "Notes", "");
+      notes.forEach((note, index) => {
+        const noteTime = new Date(note.created_at).toLocaleString();
+        sections.push(`${index + 1}. ${note.content} (${noteTime})`);
+      });
+    }
+
+    return sections.join("\n");
+  };
+
+  const handleShareIdea = async () => {
+    if (!idea) return;
+
+    setIsExporting(true);
+    const summary = buildIdeaExportSummary();
+    const canUseWebShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+    if (canUseWebShare) {
+      try {
+        await navigator.share({ text: summary });
+        toast({
+          title: "Shared",
+          description: "Idea summary sent via the native share sheet.",
+        });
+        setIsExporting(false);
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          setIsExporting(false);
+          return;
+        }
+        console.warn("Web Share API failed, falling back to download", error);
+      }
+    }
+
+    try {
+      const blob = new Blob([summary], { type: "text/plain;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${idea.title || "vault-idea"}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export ready",
+        description: "Downloaded text summary for this idea.",
+      });
+    } catch (error) {
+      console.error("Error exporting idea:", error);
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: "Couldn't export this idea. Please try again.",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="bg-background">
       {/* Header */}
@@ -403,8 +520,18 @@ export default function IdeaDetail() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon">
-              <Share className="w-4 h-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShareIdea}
+              disabled={isExporting}
+              aria-label="Export or share idea"
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Share className="w-4 h-4" />
+              )}
             </Button>
             
             {/* Archive/Delete Button - only for non-archived ideas */}
