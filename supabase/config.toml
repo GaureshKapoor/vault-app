@@ -1,0 +1,10 @@
+project_id = "lwrtzinduhbkvdooubdt"
+
+[functions.score-idea]
+verify_jwt = true
+
+[functions.validate-status-change]
+verify_jwt = true
+
+[functions.autofill-idea]
+verify_jwt = true
