@@ -1169,7 +1169,7 @@ export default function Onboarding() {
                   </p>
                 </div>
                 <ul className="space-y-2 mb-5 flex-1">
-                  {["Up to 10 ideas", "AI scoring (5/month)", "Basic templates", "Export to text"].map((feature) => (
+                  {["Up to 10 ideas", "Basic AI refinement", "Basic templates"].map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-xs text-muted-foreground">
                       <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                       {feature}
@@ -1206,7 +1206,7 @@ export default function Onboarding() {
                   </p>
                 </div>
                 <ul className="space-y-2 mb-5 flex-1">
-                  {["Unlimited ideas", "Unlimited AI scoring", "Priority AI models", "Export to all formats", "Integrations (soon)", "Early access features"].map((feature) => (
+                  {["Unlimited ideas", "Advanced AI refinement", "Scoring & insights", "Export ideas", "Priority support"].map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-xs text-primary-foreground/90">
                       <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
                       {feature}

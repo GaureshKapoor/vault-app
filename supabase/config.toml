@@ -1,4 +1,4 @@
-project_id = "lwrtzinduhbkvdooubdt"
+project_id = "bcsqrfucckfkouskqauz"
 
 [functions.score-idea]
 verify_jwt = true
@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.autofill-idea]
 verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false

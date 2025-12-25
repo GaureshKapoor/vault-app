@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { VaultLogoWithText } from "@/components/icons/VaultLogo";
@@ -37,6 +37,7 @@ export default function OnboardingSetup() {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   const [data, setData] = useState<OnboardingData>({
     displayName: "",
@@ -53,15 +54,51 @@ export default function OnboardingSetup() {
     ideaDescription: "",
   });
 
-  // Check auth on mount
+  // Check auth/subscription state on mount to avoid redirect loops
   useEffect(() => {
+    let isMounted = true;
+
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.user) {
         navigate("/auth", { replace: true });
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("subscription_status, onboarding_completed_at")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (!profile?.subscription_status || profile.subscription_status === "none") {
+        navigate("/pricing", { replace: true });
+        return;
+      }
+
+      if (profile?.onboarding_completed_at) {
+        navigate("/home", { replace: true });
+        return;
+      }
+
+      if (isMounted) {
+        setAuthReady(true);
       }
     };
+
     checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth", { replace: true });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   // Apply theme changes immediately
@@ -99,6 +136,14 @@ export default function OnboardingSetup() {
         return false;
     }
   };
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS - 1) {
@@ -272,7 +317,7 @@ export default function OnboardingSetup() {
 
       {/* Footer Navigation */}
       {currentStep < TOTAL_STEPS - 1 && (
-        <footer className="p-4 border-t border-border">
+        <footer className="p-4 pb-8 border-t border-border">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
             <Button
               variant="ghost"

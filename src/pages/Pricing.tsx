@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, X, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Check, X, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VaultLogoWithText } from "@/components/icons/VaultLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 type PlanType = "free" | "pro";
+
+// Get Stripe price ID from env (set this in .env.local)
+const STRIPE_PRICE_ID = import.meta.env.VITE_STRIPE_PRICE_ID;
 
 interface Feature {
   name: string;
@@ -25,54 +28,184 @@ const features: Feature[] = [
 
 export default function Pricing() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("pro");
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isFromApp, setIsFromApp] = useState(false);
+
+  // Check if user is coming from the app (already onboarded)
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed_at")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profile?.onboarding_completed_at) {
+          setIsFromApp(true);
+        }
+      }
+    };
+    checkUserStatus();
+  }, []);
+
+  // Handle Stripe callback (success or canceled)
+  useEffect(() => {
+    const handleStripeCallback = async () => {
+      const success = searchParams.get("success");
+      const canceled = searchParams.get("canceled");
+
+      if (success === "true") {
+        setIsProcessingPayment(true);
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            navigate("/auth");
+            return;
+          }
+
+          // Update profile with Pro subscription
+          const trialEnd = new Date();
+          trialEnd.setDate(trialEnd.getDate() + 7);
+
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              subscription_tier: "pro",
+              subscription_status: "trial",
+              trial_ends_at: trialEnd.toISOString(),
+            })
+            .eq("user_id", user.id);
+
+          if (error) throw error;
+
+          toast({
+            title: "Welcome to Pro!",
+            description: "Your 7-day trial has started.",
+          });
+
+          navigate("/onboarding/setup", { replace: true });
+        } catch (error) {
+          console.error("Error processing payment success:", error);
+          toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: "Please contact support.",
+          });
+          setIsProcessingPayment(false);
+        }
+      } else if (canceled === "true") {
+        toast({
+          title: "Payment canceled",
+          description: "You can try again or choose the free plan.",
+        });
+        // Clear the URL params
+        navigate("/pricing", { replace: true });
+      }
+    };
+
+    handleStripeCallback();
+  }, [searchParams, navigate, toast]);
 
   const handleContinue = async () => {
     setIsLoading(true);
-    
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         navigate("/auth");
         return;
       }
 
-      // Update profile with subscription info
-      // Free users get "active" status, Pro users get "trial" (until Stripe is set up)
-      const updateData: Record<string, unknown> = {
-        subscription_tier: selectedPlan,
-        subscription_status: selectedPlan === "pro" ? "trial" : "active",
-      };
+      // Free plan: update DB directly and go to onboarding
+      if (selectedPlan === "free") {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            subscription_tier: "free",
+            subscription_status: "active",
+          })
+          .eq("user_id", user.id);
 
-      // Add trial end date for pro plan
-      if (selectedPlan === "pro") {
-        const trialEnd = new Date();
-        trialEnd.setDate(trialEnd.getDate() + 7);
-        updateData.trial_ends_at = trialEnd.toISOString();
+        if (error) throw error;
+
+        navigate("/onboarding/setup");
+        return;
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(updateData)
-        .eq("user_id", user.id);
+      // Pro plan: redirect to Stripe Checkout
+      if (!STRIPE_PRICE_ID) {
+        // Fallback if Stripe not configured yet - go directly to trial
+        console.warn("STRIPE_PRICE_ID not set, using trial fallback");
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 7);
+
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            subscription_tier: "pro",
+            subscription_status: "trial",
+            trial_ends_at: trialEnd.toISOString(),
+          })
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Pro trial activated!",
+          description: "Stripe integration coming soon. Enjoy your 7-day trial!",
+        });
+
+        navigate("/onboarding/setup");
+        return;
+      }
+
+      // Call edge function to create Stripe checkout session
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          priceId: STRIPE_PRICE_ID,
+          userId: user.id,
+          successUrl: `${window.location.origin}/pricing?success=true`,
+          cancelUrl: `${window.location.origin}/pricing?canceled=true`,
+        },
+      });
 
       if (error) throw error;
 
-      navigate("/onboarding/setup");
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (error) {
-      console.error("Error updating subscription:", error);
+      console.error("Error processing subscription:", error);
       toast({
         variant: "destructive",
         title: "Something went wrong",
         description: "Please try again.",
       });
-    } finally {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while processing Stripe callback
+  if (isProcessingPayment) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-foreground font-medium">Setting up your Pro account...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,7 +213,7 @@ export default function Pricing() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate(isFromApp ? "/profile" : "/auth")}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -97,10 +230,10 @@ export default function Pricing() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Choose your plan
+              {isFromApp ? "Manage subscription" : "Choose your plan"}
             </h1>
             <p className="text-muted-foreground text-sm md:text-base">
-              Start free or unlock the full Vault experience
+              {isFromApp ? "Upgrade or change your plan" : "Start free or unlock the full Vault experience"}
             </p>
           </div>
 
@@ -225,11 +358,21 @@ export default function Pricing() {
               disabled={isLoading}
               className="w-full max-w-xs"
             >
-              {isLoading ? "Loading..." : "Continue"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {selectedPlan === "pro" ? "Redirecting to checkout..." : "Setting up..."}
+                </>
+              ) : (
+                selectedPlan === "pro" ? "Start 7-day trial" : "Continue with Free"
+              )}
             </Button>
             {selectedPlan === "pro" && (
               <p className="text-xs text-muted-foreground mt-3">
-                No credit card required. Cancel anytime.
+                {STRIPE_PRICE_ID
+                  ? "You'll be redirected to secure checkout. Cancel anytime."
+                  : "No credit card required. Cancel anytime."
+                }
               </p>
             )}
           </div>

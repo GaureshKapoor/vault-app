@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Briefcase, Target, Clock, Settings, LogOut, Trash2, Sun, Moon, Pencil, X, Check, IdCard } from "lucide-react";
+import { User, Mail, Briefcase, Target, Clock, Settings, LogOut, Trash2, Sun, Moon, Pencil, X, Check, IdCard, CreditCard, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -92,6 +92,9 @@ interface ProfileData {
   weekly_hours: string | null;
   notifications_enabled: boolean | null;
   avatar_url: string | null;
+  subscription_tier: string | null;
+  subscription_status: string | null;
+  trial_ends_at: string | null;
 }
 
 interface EditedData {
@@ -120,6 +123,9 @@ export default function Profile() {
     weekly_hours: null,
     notifications_enabled: true,
     avatar_url: null,
+    subscription_tier: null,
+    subscription_status: null,
+    trial_ends_at: null,
   });
   const [editedData, setEditedData] = useState<EditedData>({
     display_name: "",
@@ -141,7 +147,16 @@ export default function Profile() {
     }
 
     fetchProfile();
-  }, []);
+
+    // Listen for auth changes (e.g., sign out in another tab)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        navigate("/");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const fetchProfile = async () => {
     try {
@@ -150,7 +165,7 @@ export default function Profile() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, email, user_type, building_experience, goals, weekly_hours, notifications_enabled, avatar_url")
+        .select("display_name, email, user_type, building_experience, goals, weekly_hours, notifications_enabled, avatar_url, subscription_tier, subscription_status, trial_ends_at")
         .eq("user_id", user.id)
         .single();
 
@@ -165,6 +180,9 @@ export default function Profile() {
         weekly_hours: data.weekly_hours,
         notifications_enabled: data.notifications_enabled ?? true,
         avatar_url: data.avatar_url,
+        subscription_tier: data.subscription_tier,
+        subscription_status: data.subscription_status,
+        trial_ends_at: data.trial_ends_at,
       });
       setEditedData({
         display_name: data.display_name || "",
@@ -287,18 +305,42 @@ export default function Profile() {
 
   const handleDeleteAccount = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Get current session to pass auth token
+      const { data: { session } } = await supabase.auth.getSession();
 
-      await supabase.from("ideas").delete().eq("user_id", user.id);
-      await supabase.from("idea_notes").delete().eq("user_id", user.id);
-      await supabase.from("profiles").delete().eq("user_id", user.id);
+      if (!session) {
+        throw new Error("No active session");
+      }
 
+      console.log("Calling delete-user with token:", session.access_token.substring(0, 20) + "...");
+
+      // Call edge function directly with fetch for better control
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`;
+      console.log("Function URL:", functionUrl);
+
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+      });
+
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Delete user response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete account");
+      }
+
+      // Sign out after successful deletion
       await supabase.auth.signOut();
 
       toast({
         title: "Account deleted",
-        description: "Your data has been removed.",
+        description: "Your account has been permanently removed.",
       });
       navigate("/");
     } catch (error) {
@@ -664,6 +706,46 @@ export default function Profile() {
           </div>
         </motion.section>
 
+        {/* Subscription */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-3"
+        >
+          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Subscription</h3>
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-4 py-4 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                {profile.subscription_tier === "pro" ? (
+                  <Sparkles className="w-5 h-5 text-primary" />
+                ) : (
+                  <CreditCard className="w-5 h-5 text-primary" />
+                )}
+              </div>
+              <div className="flex-1">
+                <span className="font-medium text-foreground capitalize">
+                  {profile.subscription_tier || "Free"} Plan
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {profile.subscription_status === "trial" && profile.trial_ends_at
+                    ? `Trial ends ${new Date(profile.trial_ends_at).toLocaleDateString()}`
+                    : profile.subscription_status === "active"
+                    ? "Active subscription"
+                    : "Free tier"}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/pricing")}
+              >
+                {profile.subscription_tier === "pro" ? "Manage" : "Upgrade"}
+              </Button>
+            </div>
+          </div>
+        </motion.section>
+
         {/* Settings */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
@@ -706,7 +788,7 @@ export default function Profile() {
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.25 }}
           className="space-y-3"
         >
           <Button

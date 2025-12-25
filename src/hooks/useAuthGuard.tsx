@@ -48,13 +48,22 @@ export function useAuthGuard() {
         if (!hasSubscription) {
           navigate("/pricing", { replace: true });
         } else if (!hasCompletedOnboarding) {
-          navigate("/onboarding/setup", { replace: true });
+          // Has subscription but didn't finish onboarding -> reset and go to pricing
+          await supabase
+            .from("profiles")
+            .update({
+              subscription_status: "none",
+              subscription_tier: null,
+              trial_ends_at: null,
+            })
+            .eq("user_id", user.id);
+          navigate("/pricing", { replace: true });
         }
 
         setState({
           isLoading: false,
           isAuthenticated: true,
-          hasSubscription: !!hasSubscription,
+          hasSubscription: !!hasSubscription && hasCompletedOnboarding,
           hasCompletedOnboarding,
         });
       } catch (error) {
