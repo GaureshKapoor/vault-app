@@ -5,7 +5,9 @@
       "Bash(cat:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Supabase migration, UX polish, and auth flow fixes\n\n- Migrate to own Supabase project \\(new env vars\\)\n- Add avatar picker with 20 emoji options to Profile\n- Enable profile editing \\(all fields except email\\)\n- Fix layout spacing across all pages \\(remove min-h-screen conflicts\\)\n- Enable iOS-style bounce scrolling\n- Fix pricing/subscription flow \\(free users now get active status\\)\n- Add back button on onboarding step 1 → pricing\n- Make Vault logo clickable → landing page\n- Delete unused placeholder.svg, update favicon\n- Add session workflow instructions to claude.md\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(find:*)",
+      "Bash(curl:*)"
     ]
   }
 }
