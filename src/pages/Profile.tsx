@@ -311,9 +311,40 @@ export default function Profile() {
     }
   };
 
-  const handleSelectAvatar = (avatarId: string) => {
-    setEditedData((prev) => ({ ...prev, avatar_url: avatarId }));
-    setShowAvatarPicker(false);
+  const handleSelectAvatar = async (avatarId: string) => {
+    // If in edit mode, just update editedData
+    if (isEditing) {
+      setEditedData((prev) => ({ ...prev, avatar_url: avatarId }));
+      setShowAvatarPicker(false);
+      return;
+    }
+
+    // If not in edit mode, save directly to database
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatarId })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setProfile((prev) => ({ ...prev, avatar_url: avatarId }));
+      setShowAvatarPicker(false);
+      toast({
+        title: "Avatar updated",
+        description: "Looking good!",
+      });
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to update avatar",
+        description: "Please try again.",
+      });
+    }
   };
 
   const handleToggleGoal = (goalId: string) => {
@@ -362,14 +393,14 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex-1 bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-background pb-4">
+    <div className="flex flex-col bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4 flex items-center justify-between">
@@ -414,11 +445,8 @@ export default function Profile() {
           className="flex items-center gap-4"
         >
           <button
-            onClick={() => isEditing && setShowAvatarPicker(true)}
-            disabled={!isEditing}
-            className={`w-20 h-20 rounded-full gradient-hero flex items-center justify-center text-4xl transition-all ${
-              isEditing ? "ring-2 ring-primary ring-offset-2 ring-offset-background cursor-pointer hover:scale-105" : ""
-            }`}
+            onClick={() => setShowAvatarPicker(true)}
+            className="w-20 h-20 rounded-full gradient-hero flex items-center justify-center text-4xl transition-all cursor-pointer hover:scale-105 hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background"
           >
             {getAvatarEmoji(isEditing ? editedData.avatar_url : profile.avatar_url)}
           </button>
@@ -430,8 +458,10 @@ export default function Profile() {
               <p className="text-sm text-muted-foreground">
                 {formatUserType(profile.user_type)}
               </p>
-              {isEditing && (
-                <p className="text-xs text-muted-foreground">Update your name below and tap the avatar to switch styles</p>
+              {isEditing ? (
+                <p className="text-xs text-muted-foreground">Update your name below</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Tap avatar to change</p>
               )}
             </div>
           </div>

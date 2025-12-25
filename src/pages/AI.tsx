@@ -44,7 +44,7 @@ export default function AI() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="flex-1 bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4 flex items-center gap-3">

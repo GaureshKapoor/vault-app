@@ -41,9 +41,10 @@ export default function Pricing() {
       }
 
       // Update profile with subscription info
+      // Free users get "active" status, Pro users get "trial" (until Stripe is set up)
       const updateData: Record<string, unknown> = {
         subscription_tier: selectedPlan,
-        subscription_status: selectedPlan === "pro" ? "trial" : "none",
+        subscription_status: selectedPlan === "pro" ? "trial" : "active",
       };
 
       // Add trial end date for pro plan

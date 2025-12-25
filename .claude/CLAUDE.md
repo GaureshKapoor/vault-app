@@ -2,6 +2,37 @@
 
 This file defines how Claude Code should work on this project.
 
+## Session Workflow
+
+Each working session follows this structured approach:
+
+### Starting a Session
+1. **User provides a feature brief** - 2-3 paragraphs describing what the feature is, what it should do, and any specific requirements
+2. **Claude acknowledges the scope** - Confirms understanding of the feature and its boundaries
+3. **File identification** - Identify which files are directly related to this feature
+4. **Ask permission for tangential files** - If other files might need changes, ask before exploring them
+
+### During a Session
+- Stay focused on the single feature being worked on
+- Only explore files directly related to the current task
+- If discovering something that seems wrong elsewhere, note it but don't fix it unless asked
+- Use back-and-forth prompting to clarify implementation details
+- Each implementation step should be small and verifiable
+
+### Ending a Session
+- Summarize what was accomplished
+- Note any discovered issues that weren't addressed (for future sessions)
+- Only commit when explicitly asked
+- User explicitly marks the feature as "done" before moving on
+
+### Key Rules
+- **One feature per session** - Don't mix features or start new work mid-session
+- **Ask before exploring** - If you need to look at files outside the feature scope, ask first
+- **User drives scope** - Wait for the user to expand scope, don't assume
+- **Explicit handoffs** - When the user says "done" or starts a new session, that's a clean break
+
+---
+
 ## Core Principles
 
 ### 1. Feature-by-Feature Workflow

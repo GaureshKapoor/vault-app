@@ -107,7 +107,10 @@ export default function OnboardingSetup() {
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
+    if (currentStep === 0) {
+      // Go back to pricing on first step
+      navigate("/pricing");
+    } else {
       setCurrentStep((prev) => prev - 1);
     }
   };
@@ -274,7 +277,6 @@ export default function OnboardingSetup() {
             <Button
               variant="ghost"
               onClick={handleBack}
-              disabled={currentStep === 0}
               className="gap-2"
             >
               <ArrowLeft className="w-4 h-4" />

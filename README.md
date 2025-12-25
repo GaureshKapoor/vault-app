@@ -136,8 +136,8 @@ supabase/
 ## Documentation
 
 - [PRD.md](PRD.md) - Product requirements and feature scope
-- [claude.md](claude.md) - Claude Code working instructions
+- [CLAUDE.md](CLAUDE.md) - Claude Code working instructions
 
 ## Contributing
 
-This project uses feature-by-feature development. See [claude.md](claude.md) for workflow guidelines.
+This project uses feature-by-feature development. See [CLAUDE.md](claude.md) for workflow guidelines.

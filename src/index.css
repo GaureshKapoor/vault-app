@@ -113,12 +113,17 @@
     @apply border-border;
   }
 
-  html, body {
-    overscroll-behavior: none;
+  html {
+    /* Enable iOS-style bounce/rubber-band scrolling */
+    overscroll-behavior-x: none; /* Prevent horizontal overscroll (back navigation) */
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* Allow vertical bounce but prevent horizontal */
+    overscroll-behavior-y: auto;
+    overscroll-behavior-x: none;
   }
 }
 

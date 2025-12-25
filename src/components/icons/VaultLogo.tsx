@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface VaultLogoProps {
@@ -26,11 +27,26 @@ export function VaultLogo({ className, size = "md" }: VaultLogoProps) {
   );
 }
 
-export function VaultLogoWithText({ className }: { className?: string }) {
-  return (
+interface VaultLogoWithTextProps {
+  className?: string;
+  linkToLanding?: boolean;
+}
+
+export function VaultLogoWithText({ className, linkToLanding = true }: VaultLogoWithTextProps) {
+  const content = (
     <div className={cn("flex items-center gap-2", className)}>
       <VaultLogo size="md" />
       <span className="text-xl font-bold text-foreground tracking-tight">Vault</span>
     </div>
   );
+
+  if (linkToLanding) {
+    return (
+      <Link to="/" className="hover:opacity-80 transition-opacity">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }
