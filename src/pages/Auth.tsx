@@ -123,6 +123,154 @@ export default function Auth() {
     }
   };
 
+  const handleResetOnboarding = async () => {
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Missing credentials",
+        description: "Enter email and password to reset onboarding.",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // 1. Sign in first
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const userId = data.user.id;
+
+      // 2. Delete all user's ideas
+      const { error: deleteError } = await supabase
+        .from("ideas")
+        .delete()
+        .eq("user_id", userId);
+
+      if (deleteError) {
+        console.error("Failed to delete ideas:", deleteError);
+      }
+
+      // 3. Insert the 3 default template ideas (matching the DB trigger)
+      const templateIdeas = [
+        {
+          user_id: userId,
+          title: "Mood Tracker",
+          description: "A mood tracker that uses Spotify listening history to correlate music with emotional states.",
+          category: "Health",
+          main_idea: "An app that tracks daily moods and automatically pulls Spotify listening data to find patterns between music choices and emotional well-being.",
+          core_problem: "People struggle to understand what influences their mood and lack objective data to identify emotional patterns.",
+          core_value_proposition: "Discover hidden connections between your music and emotions with automatic mood-music correlation.",
+          core_loop: "Log mood → Auto-fetch Spotify data → Show correlations → Weekly insights",
+          mvp_shape: "Mobile-first PWA with Spotify OAuth, simple mood logging, and basic correlation charts.",
+          target_user: "Music lovers interested in self-improvement and mental wellness",
+          difficulty: 2,
+          priority: 4,
+          sprint_fit: 3,
+          status: "idea" as const,
+          ai_score: 7.8,
+          check_clear_problem: true,
+          check_simple_loop: true,
+          check_deployable_mvp: true,
+          is_template: true,
+          sort_order: 1,
+        },
+        {
+          user_id: userId,
+          title: "Voice Memo Idea Capture",
+          description: "Quick voice-to-text idea capture with AI organization and tagging.",
+          category: "Productivity",
+          main_idea: "A voice-first app for capturing ideas on the go, with AI transcription and automatic categorization.",
+          core_problem: "Great ideas slip away because typing on mobile is slow and inconvenient.",
+          core_value_proposition: "Never lose an idea again. Speak it, and AI handles the rest.",
+          core_loop: "Record voice → AI transcribes → Auto-tag & organize → Search & review",
+          mvp_shape: "Mobile app with voice recording, speech-to-text API, and simple folder organization.",
+          target_user: "Entrepreneurs, creatives, and busy professionals",
+          difficulty: 2,
+          priority: 4,
+          sprint_fit: 4,
+          status: "idea" as const,
+          ai_score: 8.5,
+          check_clear_problem: true,
+          check_simple_loop: true,
+          check_deployable_mvp: true,
+          is_template: true,
+          sort_order: 2,
+        },
+        {
+          user_id: userId,
+          title: "Side Project Tracker",
+          description: "Notion-style database for tracking side projects with progress and deadlines.",
+          category: "Productivity",
+          main_idea: "A streamlined project tracker designed specifically for indie hackers and side project enthusiasts.",
+          core_problem: "Side projects get abandoned because there is no simple way to track progress and maintain momentum.",
+          core_value_proposition: "Ship more projects by tracking what matters: progress, blockers, and next actions.",
+          core_loop: "Add project → Set milestones → Log progress → Review weekly",
+          mvp_shape: "Web app with kanban board, simple milestone tracking, and weekly digest emails.",
+          target_user: "Indie hackers, developers with side projects, and weekend builders",
+          difficulty: 2,
+          priority: 4,
+          sprint_fit: 4,
+          status: "idea" as const,
+          ai_score: 8.2,
+          check_clear_problem: true,
+          check_simple_loop: true,
+          check_deployable_mvp: true,
+          is_template: true,
+          sort_order: 3,
+        },
+      ];
+
+      const { error: insertError } = await supabase
+        .from("ideas")
+        .insert(templateIdeas);
+
+      if (insertError) {
+        console.error("Failed to insert template ideas:", insertError);
+      }
+
+      // 4. Reset onboarding_completed_at and profile fields to null
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          onboarding_completed_at: null,
+          user_type: null,
+          building_experience: null,
+          tools_used: null,
+          goals: null,
+          weekly_hours: null,
+        })
+        .eq("user_id", userId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast({
+        title: "Reset complete",
+        description: "Starting onboarding flow...",
+      });
+
+      navigate("/onboarding/setup", { replace: true });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Reset failed";
+      toast({
+        variant: "destructive",
+        title: "Reset failed",
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Left: Auth Form */}
@@ -252,6 +400,34 @@ export default function Auth() {
               {isSignUp ? "Log in" : "Sign up"}
               </button>
             </p>
+
+            {/* Dev Tools - Only visible in development */}
+            {import.meta.env.DEV && (
+              <div className="mt-8 p-4 border border-dashed border-muted-foreground/30 rounded-lg bg-muted/30">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                  Dev Tools
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleResetOnboarding}
+                  disabled={!email || !password || isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Resetting...
+                    </>
+                  ) : (
+                    "Reset & Restart Onboarding"
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Logs in, deletes ideas, clears onboarding status
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

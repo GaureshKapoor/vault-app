@@ -1,73 +1,143 @@
-# Welcome to your Lovable project
+# Vault
 
-## Project info
+A structured idea bank and execution tool for builders who want to ship more.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## What is Vault?
 
-## How can I edit this code?
+Vault helps you transform scattered ideas into shipped products through a structured workflow:
 
-There are several ways of editing your application.
+1. **Capture** - Jot down raw ideas in the Inbox
+2. **Structure** - Use AI to fill in problem, solution, and MVP details
+3. **Evaluate** - Score ideas on difficulty, priority, and sprint fit
+4. **Focus** - Commit to ONE idea at a time (building slot)
+5. **Ship** - Track progress through lifecycle stages
 
-**Use Lovable**
+## Quick Start
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Prerequisites
+- Node.js 18+ (recommended: use [nvm](https://github.com/nvm-sh/nvm))
+- npm or bun
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd vault-app
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Install dependencies
+npm install
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your Supabase credentials
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Environment Variables
 
-**Use GitHub Codespaces**
+```env
+VITE_SUPABASE_PROJECT_ID=your-project-id
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+VITE_SUPABASE_URL=https://your-project.supabase.co
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Supabase Setup
 
-## What technologies are used for this project?
+Vault uses Supabase for authentication, database, and edge functions.
 
-This project is built with:
+### Database Tables
+- **profiles** - User settings and subscription info
+- **ideas** - Core idea data with AI scoring fields
+- **idea_notes** - Notes attached to ideas
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Migrations
+Apply migrations in order from `supabase/migrations/`:
+1. Base schema (tables, RLS, triggers)
+2. Subscription fields
+3. Template ideas
+4. Sort order
 
-## How can I deploy this project?
+### Edge Functions
+Located in `supabase/functions/`:
+- `autofill-idea` - AI-powered field generation (needs AI provider)
+- `score-idea` - AI-powered idea evaluation (needs AI provider)
+- `validate-status-change` - Lifecycle transition rules
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Using Vault
 
-## Can I connect a custom domain to my Lovable project?
+### Core Workflow
 
-Yes, you can!
+1. **Sign up** with email/password
+2. **Complete onboarding** (7 steps)
+3. **Capture ideas** in the Inbox (quick thoughts)
+4. **Create structured ideas** with full details
+5. **Evaluate** using difficulty, priority, sprint fit
+6. **Move to "building"** when ready to commit
+7. **Track progress** through shipped
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Idea Lifecycle
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```
+idea → shortlisted → building → shipped
+         ↓              ↓
+       paused        paused
+         ↓              ↓
+       archived      archived
+```
+
+**Key constraint**: Only ONE idea can be "building" at a time.
+
+### Idea Fields
+- **Title** - Short name
+- **Category** - Type of idea (App, Tool, Service, etc.)
+- **Core Problem** - What problem does this solve?
+- **Value Proposition** - What's unique about your solution?
+- **Core Loop** - What's the main user action?
+- **MVP Shape** - What's the minimum to launch?
+- **Target User** - Who is this for?
+
+## Tech Stack
+
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (PostgreSQL, Auth, Edge Functions)
+- **State**: TanStack Query, React Router DOM
+- **Animations**: Framer Motion
+
+## Current Limitations
+
+- **AI features are stubbed** - Autofill and scoring show "Coming soon"
+- **Inbox is local-only** - Thoughts stored in localStorage
+- **Profile is read-only** - Can't update display name or avatar
+- **No password reset** - Account recovery not implemented
+- **Web only** - No native mobile app yet
+
+## Project Structure
+
+```
+src/
+├── pages/           # Route components
+├── components/      # Reusable UI
+│   ├── layout/      # App shell, navigation
+│   └── ui/          # shadcn/ui primitives
+├── hooks/           # Custom React hooks
+├── integrations/    # Supabase client
+└── lib/             # Utilities
+
+supabase/
+├── migrations/      # Database schema
+└── functions/       # Edge functions
+```
+
+## Documentation
+
+- [PRD.md](PRD.md) - Product requirements and feature scope
+- [claude.md](claude.md) - Claude Code working instructions
+
+## Contributing
+
+This project uses feature-by-feature development. See [claude.md](claude.md) for workflow guidelines.

@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 const TOTAL_STEPS = 7;
 
 interface OnboardingData {
+  displayName: string;
   userType: string;
   buildingExperience: string;
   toolsUsed: string[];
@@ -38,6 +39,7 @@ export default function OnboardingSetup() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [data, setData] = useState<OnboardingData>({
+    displayName: "",
     userType: "",
     buildingExperience: "",
     toolsUsed: [],
@@ -80,7 +82,7 @@ export default function OnboardingSetup() {
   const canProceed = () => {
     switch (currentStep) {
       case 0:
-        return !!data.userType;
+        return !!data.userType && data.displayName.trim().length > 0;
       case 1:
         return !!data.buildingExperience;
       case 2:
@@ -121,6 +123,7 @@ export default function OnboardingSetup() {
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
+          display_name: data.displayName || null,
           user_type: data.userType,
           building_experience: data.buildingExperience,
           tools_used: data.toolsUsed,
@@ -191,6 +194,8 @@ export default function OnboardingSetup() {
           <WhoAreYou
             value={data.userType}
             onChange={(v) => updateData("userType", v)}
+            name={data.displayName}
+            onNameChange={(v) => updateData("displayName", v)}
           />
         );
       case 1:

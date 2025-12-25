@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { GraduationCap, User, Rocket, Palette, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 interface WhoAreYouProps {
   value: string;
   onChange: (value: string) => void;
+  name: string;
+  onNameChange: (value: string) => void;
 }
 
 const options = [
@@ -15,7 +18,7 @@ const options = [
   { id: "explorer", label: "Explorer (ideas, no pressure)", icon: Compass },
 ];
 
-export function WhoAreYou({ value, onChange }: WhoAreYouProps) {
+export function WhoAreYou({ value, onChange, name, onNameChange }: WhoAreYouProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -30,6 +33,20 @@ export function WhoAreYou({ value, onChange }: WhoAreYouProps) {
         <p className="text-muted-foreground">
           Which best describes you right now?
         </p>
+      </div>
+
+      <div className="space-y-2 max-w-md mx-auto text-left">
+        <label className="text-sm font-medium text-foreground" htmlFor="display-name">
+          What should we call you?
+        </label>
+        <Input
+          id="display-name"
+          value={name}
+          onChange={(event) => onNameChange(event.target.value)}
+          placeholder="Your name"
+          autoComplete="given-name"
+        />
+        <p className="text-xs text-muted-foreground">We’ll personalize your experience with this.</p>
       </div>
 
       <div className="grid gap-3 max-w-md mx-auto">

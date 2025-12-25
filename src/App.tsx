@@ -8,7 +8,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Pages
-import Onboarding from "./pages/Onboarding";
+import WebLanding from "./pages/WebLanding";
+import AppStart from "./pages/AppStart";
 import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
 import OnboardingSetup from "./pages/OnboardingSetup";
@@ -51,7 +52,8 @@ const App = () => (
         <ScrollToTop />
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Onboarding />} />
+          <Route path="/" element={<WebLanding />} />
+          <Route path="/app" element={<AppStart />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/onboarding/setup" element={<OnboardingSetup />} />
