@@ -21,7 +21,7 @@ function loadThoughts(): RawThought[] {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      return parsed.map((t: any) => ({
+      return parsed.map((t: { id: string; text: string; createdAt: string }) => ({
         ...t,
         createdAt: new Date(t.createdAt),
       }));

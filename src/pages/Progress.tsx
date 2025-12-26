@@ -98,7 +98,7 @@ export default function Progress() {
               className="space-y-2"
             >
               <div className="flex items-center gap-2 mb-3">
-                <StatusBadge status={statusLabels[status] as any} />
+                <StatusBadge status={statusLabels[status]} />
                 <span className="text-sm text-muted-foreground">({statusIdeas.length})</span>
               </div>
               <div className="space-y-2">
