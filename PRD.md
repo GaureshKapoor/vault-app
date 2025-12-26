@@ -214,3 +214,4 @@ idea_notes
 6. **Notes are append-only** - can't edit or delete
 7. **No mobile app** - responsive web only
 8. **Dev reset tool temporary exposure** - reset & restart onboarding button will revert to dev-only before launch
+9. **Lint warnings** - ESLint now surfaces unused variables (warnings only) to keep dead code visible
