@@ -287,10 +287,10 @@ function AnimatedTagline() {
   }, []);
 
   return (
-    <div className="h-14 md:h-18 lg:h-20 flex items-center justify-center mt-2">
+    <div className="h-14 md:h-18 lg:h-20 flex items-center justify-center mt-2 overflow-visible">
       <span
         key={taglineWords[currentWordIndex]}
-        className="text-4xl md:text-5xl lg:text-6xl font-bold text-gradient italic animate-fade-in"
+        className="text-4xl md:text-5xl lg:text-6xl font-bold text-gradient italic animate-fade-in pr-2"
       >
         {taglineWords[currentWordIndex]}
       </span>
@@ -309,7 +309,7 @@ function IdeaBankCarousel() {
 
   const getCardStyle = (index: number) => {
     const diff = index - activeIndex;
-    
+
     if (diff === 0) {
       // Center card
       return {
@@ -317,7 +317,6 @@ function IdeaBankCarousel() {
         scale: 1,
         x: "0%",
         opacity: 1,
-        rotateY: 0,
       };
     } else if (diff === -1 || (activeIndex === 0 && index === 2)) {
       // Left card
@@ -326,7 +325,6 @@ function IdeaBankCarousel() {
         scale: 0.85,
         x: "-60%",
         opacity: 0.6,
-        rotateY: 15,
       };
     } else if (diff === 1 || (activeIndex === 2 && index === 0)) {
       // Right card
@@ -335,7 +333,6 @@ function IdeaBankCarousel() {
         scale: 0.85,
         x: "60%",
         opacity: 0.6,
-        rotateY: -15,
       };
     } else {
       // Hidden
@@ -344,7 +341,6 @@ function IdeaBankCarousel() {
         scale: 0.7,
         x: diff < 0 ? "-80%" : "80%",
         opacity: 0,
-        rotateY: 0,
       };
     }
   };
@@ -369,7 +365,7 @@ function IdeaBankCarousel() {
       </div>
 
       {/* Cards container */}
-      <div className="relative h-[280px] md:h-[380px] lg:h-[420px] perspective-1000">
+      <div className="relative h-[280px] md:h-[380px] lg:h-[420px]">
         <div className="absolute inset-0 flex items-center justify-center">
           {demoViews.map((view, i) => {
             const style = getCardStyle(i);
@@ -381,16 +377,14 @@ function IdeaBankCarousel() {
                   scale: style.scale,
                   x: style.x,
                   opacity: style.opacity,
-                  rotateY: style.rotateY,
                   zIndex: style.zIndex,
                 }}
                 transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
+                  type: "tween",
+                  duration: 0.35,
+                  ease: [0.25, 0.1, 0.25, 1],
                 }}
-                className={`absolute w-[85%] md:w-[55%] lg:w-[45%] aspect-[4/3] cursor-pointer`}
-                style={{ transformStyle: "preserve-3d" }}
+                className={`absolute w-[85%] md:w-[55%] lg:w-[45%] aspect-[4/3] cursor-pointer will-change-transform`}
               >
                 <div className={`w-full h-full rounded-2xl overflow-hidden border-2 bg-card shadow-2xl transition-colors duration-300 ${
                   activeIndex === i ? "border-primary" : "border-border"
@@ -476,15 +470,15 @@ function PricingToggle({ onPlanChange }: { onPlanChange: (plan: 'free' | 'pro') 
 
 function AnimatedSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className={className}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ type: "tween", duration: 0.4, ease: "easeOut" }}
+      className={`will-change-transform ${className}`}
     >
       {children}
     </motion.div>
@@ -677,17 +671,17 @@ export default function Onboarding() {
           }} />
         </div>
 
-        {/* Decorative glow */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/10 dark:bg-primary/20 blur-[150px] rounded-full" />
-        <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-primary/5 dark:bg-primary/10 blur-[100px] rounded-full" />
+        {/* Decorative glow - reduced blur for performance */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/10 dark:bg-primary/20 blur-[80px] rounded-full" />
+        <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-primary/5 dark:bg-primary/10 blur-[60px] rounded-full" />
 
         <div className="relative z-10 flex flex-col flex-1">
           {/* Hero Content */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="px-6 mt-4 md:mt-6 text-center"
+            transition={{ type: "tween", duration: 0.5, delay: 0.1, ease: "easeOut" }}
+            className="px-6 mt-4 md:mt-6 text-center will-change-transform"
           >
             <Badge className="mb-3 bg-primary/10 text-primary border-primary/20 px-4 py-1.5 text-sm font-medium">
               🚀 Now in Beta
@@ -715,11 +709,11 @@ export default function Onboarding() {
 
           {/* Idea Cards */}
           <main className="flex-1 flex flex-col justify-center px-6 py-2">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="max-w-2xl lg:max-w-4xl mx-auto w-full"
+              transition={{ type: "tween", duration: 0.4, delay: 0.2, ease: "easeOut" }}
+              className="max-w-2xl lg:max-w-4xl mx-auto w-full will-change-transform"
             >
               <div className="min-h-[120px] md:min-h-[140px] flex items-center">
                 <div className="w-full">
@@ -731,10 +725,10 @@ export default function Onboarding() {
                       initial="enter"
                       animate="center"
                       exit="exit"
-                      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ type: "tween", duration: 0.3, ease: "easeOut" }}
                       drag="x"
                       dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={0.2}
+                      dragElastic={0.1}
                       onDragStart={() => setIsAutoPlaying(false)}
                       onDragEnd={(_, info) => {
                         if (info.offset.x > swipeThreshold) paginate(-1);
@@ -795,11 +789,11 @@ export default function Onboarding() {
 
           {/* Hero CTA */}
           <div className="px-6 pb-8 pt-3 md:pt-4 relative z-10">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="max-w-xs md:max-w-sm mx-auto"
+              transition={{ type: "tween", duration: 0.4, delay: 0.3, ease: "easeOut" }}
+              className="max-w-xs md:max-w-sm mx-auto will-change-transform"
             >
               <Button
                 onClick={() => navigate("/auth?mode=signup")}
@@ -905,11 +899,11 @@ export default function Onboarding() {
               {features.map((feature, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  transition={{ type: "tween", duration: 0.35, delay: i * 0.05, ease: "easeOut" }}
                   viewport={{ once: true }}
-                  className="p-5 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors flex-shrink-0 w-[260px] md:w-auto snap-center"
+                  className="p-5 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors flex-shrink-0 w-[260px] md:w-auto snap-center will-change-transform"
                 >
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
                     <feature.icon className="w-5 h-5 text-primary" />
@@ -958,11 +952,11 @@ export default function Onboarding() {
                 {howItWorks.map((step, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: i * 0.2 }}
+                    transition={{ type: "tween", duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
                     viewport={{ once: true }}
-                    className="relative"
+                    className="relative will-change-transform"
                   >
                     {/* Step number circle */}
                     <div className="w-20 h-20 mx-auto mb-4 relative">
@@ -987,11 +981,11 @@ export default function Onboarding() {
             {howItWorks.map((step, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -15 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
+                transition={{ type: "tween", duration: 0.35, delay: i * 0.05, ease: "easeOut" }}
                 viewport={{ once: true }}
-                className="flex gap-4 items-start"
+                className="flex gap-4 items-start will-change-transform"
               >
                 <div className="w-14 h-14 flex-shrink-0 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center text-primary-foreground text-2xl font-bold shadow-lg">
                   {step.step}
@@ -1060,11 +1054,11 @@ export default function Onboarding() {
             {testimonials.map((testimonial, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.15 }}
+                transition={{ type: "tween", duration: 0.4, delay: i * 0.08, ease: "easeOut" }}
                 viewport={{ once: true }}
-                className={`p-5 rounded-xl border flex-shrink-0 w-[280px] md:w-auto snap-center ${
+                className={`p-5 rounded-xl border flex-shrink-0 w-[280px] md:w-auto snap-center will-change-transform ${
                   i === 1 
                     ? "bg-primary text-primary-foreground border-primary md:-translate-y-4" 
                     : "bg-card border-border"
@@ -1152,11 +1146,11 @@ export default function Onboarding() {
               {/* Free Plan */}
               <motion.div
                 id="pricing-free"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ type: "tween", duration: 0.4, ease: "easeOut" }}
                 viewport={{ once: true }}
-                className="p-5 rounded-xl bg-card border border-border flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col"
+                className="p-5 rounded-xl bg-card border border-border flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col will-change-transform"
               >
                 <div className="mb-5">
                   <h3 className="text-lg font-bold text-foreground mb-1">Free</h3>
@@ -1184,11 +1178,11 @@ export default function Onboarding() {
               {/* Pro Plan */}
               <motion.div
                 id="pricing-pro"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                transition={{ type: "tween", duration: 0.4, delay: 0.05, ease: "easeOut" }}
                 viewport={{ once: true }}
-                className="p-5 pt-6 rounded-xl bg-primary text-primary-foreground border border-primary relative flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col"
+                className="p-5 pt-6 rounded-xl bg-primary text-primary-foreground border border-primary relative flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col will-change-transform"
               >
                 <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                   <span className="bg-foreground text-background text-xs font-bold px-2.5 py-0.5 rounded-full">
@@ -1254,9 +1248,9 @@ export default function Onboarding() {
 
       {/* Final CTA Section */}
       <section className="py-10 md:py-16 px-6 relative overflow-hidden">
-        {/* Background glow */}
+        {/* Background glow - reduced blur for performance */}
         <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/20 blur-[120px] rounded-full" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/20 blur-[70px] rounded-full" />
         </div>
 
         <AnimatedSection>
