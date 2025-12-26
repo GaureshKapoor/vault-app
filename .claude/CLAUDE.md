@@ -123,3 +123,19 @@ supabase/
 - State what you're about to do before doing it
 - If something fails, explain why and propose alternatives
 - Don't apologize excessively - just fix the issue
+
+---
+
+## Feature Plans
+
+Feature implementation plans are stored in `plans/` folder at project root.
+
+### Workflow
+1. **Before implementation:** Create or reference the plan file for the feature (e.g., `plans/AI-assistant.md`)
+2. **During implementation:** Update the plan file as phases complete - mark steps done, note blockers
+3. **After implementation:** Keep the plan as a reference document
+
+### Rules
+- One `.md` file per feature
+- Always check `plans/` for existing plan before starting work
+- Update plan status as you progress through phases

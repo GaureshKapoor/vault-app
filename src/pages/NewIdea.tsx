@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
+import { useAIOperations, type AutofillResult } from "@/hooks/useAIOperations";
+import { AutofillPreviewDialog } from "@/components/ai/AutofillPreviewDialog";
 
 interface ThinkingCardProps {
   icon: React.ElementType;
@@ -43,12 +45,13 @@ export default function NewIdea() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  
+  const { autofillIdea, isLoading: isAutofilling } = useAIOperations();
+
   // Check if we're creating from an inbox thought
   const inboxThought = location.state?.inboxThought as string | undefined;
-  
+
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Form state
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -58,6 +61,10 @@ export default function NewIdea() {
   const [coreLoop, setCoreLoop] = useState("");
   const [mvpShape, setMvpShape] = useState("");
   const [targetUser, setTargetUser] = useState("");
+
+  // AI autofill state
+  const [autofillSuggestions, setAutofillSuggestions] = useState<AutofillResult | null>(null);
+  const [showAutofillDialog, setShowAutofillDialog] = useState(false);
 
   // Check auth on mount
   useEffect(() => {
@@ -70,10 +77,29 @@ export default function NewIdea() {
     checkAuth();
   }, [navigate]);
 
-  const handleAutofill = () => {
+  const handleAutofill = async () => {
+    const result = await autofillIdea({
+      title,
+      category,
+      main_idea: mainIdea,
+    });
+
+    if (result) {
+      setAutofillSuggestions(result);
+      setShowAutofillDialog(true);
+    }
+  };
+
+  const handleApplyAutofill = (selectedFields: Partial<AutofillResult>) => {
+    if (selectedFields.core_problem) setCoreProblem(selectedFields.core_problem);
+    if (selectedFields.core_value_proposition) setCoreValueProp(selectedFields.core_value_proposition);
+    if (selectedFields.core_loop) setCoreLoop(selectedFields.core_loop);
+    if (selectedFields.mvp_shape) setMvpShape(selectedFields.mvp_shape);
+    if (selectedFields.target_user) setTargetUser(selectedFields.target_user);
+
     toast({
-      title: "Coming soon",
-      description: "AI autofill feature is under development.",
+      title: "Fields updated",
+      description: `Applied ${Object.keys(selectedFields).length} AI suggestions.`,
     });
   };
 
@@ -216,10 +242,15 @@ export default function NewIdea() {
           <Button
             variant="outline"
             onClick={handleAutofill}
+            disabled={isAutofilling}
             className="w-full gap-2"
           >
-            <Sparkles className="w-4 h-4" />
-            Autofill with AI
+            {isAutofilling ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {isAutofilling ? "Generating..." : "Autofill with AI"}
           </Button>
         </motion.section>
 
@@ -281,6 +312,21 @@ export default function NewIdea() {
           </div>
         </motion.section>
       </div>
+
+      {/* AI Autofill Preview Dialog */}
+      <AutofillPreviewDialog
+        open={showAutofillDialog}
+        onOpenChange={setShowAutofillDialog}
+        suggestions={autofillSuggestions}
+        currentValues={{
+          core_problem: coreProblem,
+          core_value_proposition: coreValueProp,
+          core_loop: coreLoop,
+          mvp_shape: mvpShape,
+          target_user: targetUser,
+        }}
+        onApply={handleApplyAutofill}
+      />
     </div>
   );
 }

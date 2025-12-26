@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Edit2, Check, X, Rocket, Target, Lightbulb, Layers, Share, Loader2, Save, Sparkles, Trash2, Lock, Unlock, RotateCcw } from "lucide-react";
+import { ArrowLeft, Edit2, Check, X, Rocket, Target, Lightbulb, Layers, Share, Loader2, Save, Sparkles, Trash2, Lock, Unlock, RotateCcw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, STATUS_OPTIONS, IdeaStatus as StatusBadgeStatus } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
+import { useAIOperations, type AutofillResult, type ScoreResult } from "@/hooks/useAIOperations";
+import { AutofillPreviewDialog } from "@/components/ai/AutofillPreviewDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -111,6 +113,8 @@ export default function IdeaDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { autofillIdea, scoreIdea, isLoading: isAILoading } = useAIOperations();
+
   const [idea, setIdea] = useState<Idea | null>(null);
   const [notes, setNotes] = useState<IdeaNote[]>([]);
   const [newNote, setNewNote] = useState("");
@@ -119,7 +123,12 @@ export default function IdeaDetail() {
   const [isSaving, setIsSaving] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<Partial<Idea>>({});
   const [isExporting, setIsExporting] = useState(false);
-  
+
+  // AI state
+  const [autofillSuggestions, setAutofillSuggestions] = useState<AutofillResult | null>(null);
+  const [showAutofillDialog, setShowAutofillDialog] = useState(false);
+  const [isScoring, setIsScoring] = useState(false);
+
   // Track if this is the first navigation from onboarding
   const fromOnboarding = searchParams.get("fromOnboarding") === "true";
   const hasNavigatedBack = useRef(false);
@@ -257,11 +266,107 @@ export default function IdeaDetail() {
     }
   };
 
-  const handleAutofill = () => {
-    toast({
-      title: "Coming soon",
-      description: "AI autofill feature is under development.",
+  const handleAutofill = async () => {
+    if (!idea) return;
+
+    const result = await autofillIdea({
+      title: idea.title,
+      category: idea.category || undefined,
+      main_idea: idea.main_idea || idea.description || undefined,
     });
+
+    if (result) {
+      setAutofillSuggestions(result);
+      setShowAutofillDialog(true);
+    }
+  };
+
+  const handleApplyAutofill = async (selectedFields: Partial<AutofillResult>) => {
+    if (!idea) return;
+
+    try {
+      const { error } = await supabase
+        .from("ideas")
+        .update(selectedFields)
+        .eq("id", idea.id);
+
+      if (error) throw error;
+
+      setIdea((prev) => prev ? { ...prev, ...selectedFields } : prev);
+      toast({
+        title: "Fields updated",
+        description: `Applied ${Object.keys(selectedFields).length} AI suggestions.`,
+      });
+    } catch (error) {
+      console.error("Error applying autofill:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to apply suggestions.",
+      });
+    }
+  };
+
+  const handleScore = async () => {
+    if (!idea) return;
+
+    setIsScoring(true);
+    try {
+      const result = await scoreIdea({
+        title: idea.title,
+        description: idea.description || undefined,
+        category: idea.category || undefined,
+        core_problem: idea.core_problem,
+        core_value_proposition: idea.core_value_proposition,
+        core_loop: idea.core_loop || undefined,
+        mvp_shape: idea.mvp_shape || undefined,
+        target_user: idea.target_user || undefined,
+      });
+
+      if (result) {
+        const { error } = await supabase
+          .from("ideas")
+          .update({
+            ai_score: result.ai_score,
+            ai_reasoning: result.ai_reasoning,
+            difficulty: result.suggested_difficulty,
+            priority: result.suggested_priority,
+            sprint_fit: result.suggested_sprint_fit,
+            check_clear_problem: result.check_clear_problem,
+            check_simple_loop: result.check_simple_loop,
+            check_deployable_mvp: result.check_deployable_mvp,
+          })
+          .eq("id", idea.id);
+
+        if (error) throw error;
+
+        setIdea((prev) => prev ? {
+          ...prev,
+          ai_score: result.ai_score,
+          ai_reasoning: result.ai_reasoning,
+          difficulty: result.suggested_difficulty,
+          priority: result.suggested_priority,
+          sprint_fit: result.suggested_sprint_fit,
+          check_clear_problem: result.check_clear_problem,
+          check_simple_loop: result.check_simple_loop,
+          check_deployable_mvp: result.check_deployable_mvp,
+        } : prev);
+
+        toast({
+          title: "Idea scored!",
+          description: `AI Score: ${result.ai_score}/10`,
+        });
+      }
+    } catch (error) {
+      console.error("Error scoring idea:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to score idea.",
+      });
+    } finally {
+      setIsScoring(false);
+    }
   };
 
   const handleMakeItYours = async () => {
@@ -687,15 +792,36 @@ export default function IdeaDetail() {
         >
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Status & Details</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAutofill}
-              className="gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              Autofill with AI
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleScore}
+                disabled={isScoring || isAILoading}
+                className="gap-1.5"
+              >
+                {isScoring ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Zap className="w-3.5 h-3.5" />
+                )}
+                {isScoring ? "Scoring..." : "Score"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAutofill}
+                disabled={isAILoading}
+                className="gap-1.5"
+              >
+                {isAILoading && !isScoring ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                {isAILoading && !isScoring ? "Generating..." : "Autofill"}
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card rounded-xl border border-border p-3">
@@ -920,6 +1046,24 @@ export default function IdeaDetail() {
           )}
         </motion.section>
       </div>
+
+      {/* AI Autofill Preview Dialog */}
+      <AutofillPreviewDialog
+        open={showAutofillDialog}
+        onOpenChange={setShowAutofillDialog}
+        suggestions={autofillSuggestions}
+        currentValues={{
+          core_problem: idea?.core_problem,
+          core_value_proposition: idea?.core_value_proposition,
+          core_loop: idea?.core_loop || undefined,
+          mvp_shape: idea?.mvp_shape || undefined,
+          target_user: idea?.target_user || undefined,
+          difficulty: idea?.difficulty || undefined,
+          priority: idea?.priority || undefined,
+          sprint_fit: idea?.sprint_fit || undefined,
+        }}
+        onApply={handleApplyAutofill}
+      />
     </div>
   );
 }
