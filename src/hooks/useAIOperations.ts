@@ -33,8 +33,8 @@ interface AutofillInput {
 
 interface ScoreInput {
   title: string;
-  description?: string;
-  category?: string;
+  description: string;
+  category: string;
   core_problem: string;
   core_value_proposition: string;
   core_loop?: string;
@@ -99,11 +99,18 @@ export function useAIOperations() {
   };
 
   const scoreIdea = async (input: ScoreInput): Promise<ScoreResult | null> => {
-    if (!input.title || !input.core_problem || !input.core_value_proposition) {
+    const missingFields: string[] = [];
+    if (!input.title) missingFields.push("title");
+    if (!input.category) missingFields.push("category");
+    if (!input.description) missingFields.push("1-line description");
+    if (!input.core_problem) missingFields.push("core problem");
+    if (!input.core_value_proposition) missingFields.push("value proposition");
+
+    if (missingFields.length > 0) {
       toast({
         variant: "destructive",
         title: "Missing fields",
-        description: "Title, core problem, and value proposition are required for scoring.",
+        description: `Required for scoring: ${missingFields.join(", ")}.`,
       });
       return null;
     }

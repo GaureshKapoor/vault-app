@@ -34,21 +34,26 @@ export default function Pricing() {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isFromApp, setIsFromApp] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
   // Check if user is coming from the app (already onboarded)
   useEffect(() => {
     const checkUserStatus = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_completed_at")
-          .eq("user_id", user.id)
-          .single();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("onboarding_completed_at")
+            .eq("user_id", user.id)
+            .single();
 
-        if (profile?.onboarding_completed_at) {
-          setIsFromApp(true);
+          if (profile?.onboarding_completed_at) {
+            setIsFromApp(true);
+          }
         }
+      } finally {
+        setIsCheckingStatus(false);
       }
     };
     checkUserStatus();
@@ -195,13 +200,15 @@ export default function Pricing() {
     }
   };
 
-  // Show loading state while processing Stripe callback
-  if (isProcessingPayment) {
+  // Show loading state while checking user status or processing Stripe callback
+  if (isCheckingStatus || isProcessingPayment) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-foreground font-medium">Setting up your Pro account...</p>
+          <p className="text-foreground font-medium">
+            {isProcessingPayment ? "Setting up your Pro account..." : "Loading..."}
+          </p>
         </div>
       </div>
     );
