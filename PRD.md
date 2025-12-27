@@ -24,16 +24,50 @@ Raw Ideas → Structured Fields → Evaluation → Ranking → Lifecycle → Shi
 
 ---
 
+## Platform Strategy
+
+### Current Platforms
+| Platform | Technology | Landing Page | Status |
+|----------|------------|--------------|--------|
+| Web (Desktop/Tablet) | React + Vite | Full landing page | Active |
+| Web (Mobile browser) | React + Vite | Full landing page | Active |
+| iOS App | Capacitor (WebView) | Minimal hero only | In Development |
+
+### Future Considerations
+- **Android App**: Can be added via Capacitor when needed
+- **Expo Migration**: If native performance becomes critical, evaluate after 3 months of user feedback
+
+---
+
+## Payment Strategy
+
+| Platform | Provider | Status |
+|----------|----------|--------|
+| Web (browser) | Stripe | Stubbed - all users get free tier |
+| iOS App | Apple IAP | Future - after App Store approval |
+
+Current behavior: Pricing page exists, Stripe checkout stubbed. All users receive free tier with active subscription status.
+
+---
+
 ## Feature Scope
 
 ### Implemented & Working
 
 #### Authentication
 - Email/password signup and login
+- Google OAuth integration
+- Password reset via email
 - Auto-confirm enabled (no email verification required)
 - Session persistence via localStorage
 - Protected routes redirect to /auth if not logged in
 - Three-tier check: authenticated → has subscription → completed onboarding
+
+#### AI Features (via OpenRouter)
+- **AI Autofill**: Generates problem, value prop, loop, MVP, target user from title + category
+- **AI Scoring**: Returns 0-10 score with reasoning, suggests difficulty/priority/sprint fit
+- **AI Chat Assistant**: Conversational AI with context from user's ideas (top 20 non-archived)
+- **AI Provider**: OpenRouter (model-agnostic, currently using LLaMA 3.2, configurable via env)
 
 #### Idea Management
 - **Create**: Title, category, description, core fields (problem, value prop, loop, MVP, target user)
@@ -64,6 +98,12 @@ idea → shortlisted → building → shipped
 - Displayed in reverse chronological order
 - No edit/delete functionality
 
+#### Profile Management
+- Avatar picker with 20 emoji options
+- Editable fields: display name, phone, location, bio
+- Email display (read-only, from auth)
+- User preferences from onboarding
+
 #### Inbox (Raw Thoughts)
 - Quick capture of unstructured thoughts
 - Stored in localStorage only (not synced to database)
@@ -79,29 +119,12 @@ idea → shortlisted → building → shipped
 - Captures: user type, experience, goals, time commitment, preferences
 - Creates first idea during onboarding
 
-### Stubbed / Not Yet Wired
-
-#### AI Autofill
-- **Backend**: Edge function ready at `/autofill-idea`
-- **UI**: Button exists, shows "Coming soon" toast
-- **Dependency**: Requires Lovable AI Gateway (needs replacement)
-- **What it does**: Given title + category, generates structured fields
-
-#### AI Scoring
-- **Backend**: Edge function ready at `/score-idea`
-- **UI**: Displays ai_score if populated, but no trigger to populate
-- **Dependency**: Requires Lovable AI Gateway (needs replacement)
-- **What it does**: Returns 0-10 score with reasoning, suggests difficulty/priority
+### Stubbed / Not Yet Implemented
 
 #### Status Validation
 - **Backend**: Edge function ready at `/validate-status-change`
 - **UI**: Status changes work directly, don't call validation
 - **What it does**: Validates transition rules, enforces one-building limit
-
-#### Profile Editing
-- Profile page shows placeholder data
-- Email fetched from auth, other fields not editable
-- Database has fields for: display_name, avatar_url, bio, location, phone
 
 #### Feed / Community
 - Route exists at /feed
@@ -117,18 +140,18 @@ idea → shortlisted → building → shipped
 ## Tech Stack
 
 ### Frontend
-| Technology | Purpose |
-|------------|---------|
-| React 18 | UI framework |
-| Vite | Build tool |
-| TypeScript | Type safety |
-| Tailwind CSS | Styling |
-| shadcn/ui | Component library (50+ components) |
-| Framer Motion | Animations |
-| React Router DOM | Routing |
-| TanStack Query | Data fetching (configured, underutilized) |
-| React Hook Form + Zod | Form handling & validation |
-| Lucide | Icons |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 18.3.1 | UI framework |
+| Vite | 5.4.19 | Build tool (SWC) |
+| TypeScript | 5.8 | Type safety |
+| Tailwind CSS | 3.4 | Styling |
+| shadcn/ui | - | Component library (50+ components) |
+| Framer Motion | 12.23 | Animations |
+| React Router DOM | 6.30 | Routing |
+| TanStack Query | 5.83 | Data fetching & caching |
+| React Hook Form + Zod | 7.61 | Form handling & validation |
+| Lucide React | 0.462 | Icons |
 
 ### Backend
 | Technology | Purpose |
@@ -136,6 +159,18 @@ idea → shortlisted → building → shipped
 | Supabase | Database, Auth, Edge Functions |
 | PostgreSQL | Database engine |
 | RLS | Row-level security for data isolation |
+| OpenRouter | AI provider (model-agnostic LLM access) |
+
+### Edge Functions (7 deployed)
+| Function | Purpose |
+|----------|---------|
+| `autofill-idea` | AI generates idea fields from title/category |
+| `score-idea` | AI scores idea 0-10 with reasoning |
+| `ai-chat` | Conversational AI assistant |
+| `create-checkout-session` | Stripe checkout (stubbed) |
+| `delete-user` | Complete account deletion |
+| `validate-status-change` | Lifecycle transition validation |
+| `_shared/ai-client` | Reusable OpenRouter client |
 
 ### Database Schema
 ```
@@ -206,12 +241,15 @@ idea_notes
 
 ## Current Limitations
 
-1. **AI functions depend on Lovable AI Gateway** - needs migration to own provider
-2. **Inbox is localStorage only** - data lost if browser cleared
-3. **No email verification** - auto-confirm is enabled
-4. **No password reset flow** - users can't recover accounts
-5. **Profile is read-only** - can't update display name, avatar, etc.
-6. **Notes are append-only** - can't edit or delete
-7. **No mobile app** - responsive web only
-8. **Dev reset tool temporary exposure** - reset & restart onboarding button will revert to dev-only before launch
-9. **Lint warnings** - ESLint now surfaces unused variables (warnings only) to keep dead code visible
+1. **Inbox is localStorage only** - data lost if browser cleared
+2. **No email verification** - auto-confirm is enabled
+3. **Notes are append-only** - can't edit or delete
+4. **Payments stubbed** - Stripe integration exists but checkout skipped; all users get free tier
+5. **iOS app in development** - Capacitor wrapper being implemented
+6. **Dev reset tool exposed** - reset & restart onboarding button will revert to dev-only before launch
+
+### Resolved (previously limitations)
+- ~~AI functions depend on Lovable AI Gateway~~ → Now using OpenRouter
+- ~~No password reset flow~~ → Password reset working
+- ~~Profile is read-only~~ → Profile editing with avatar picker working
+- ~~No mobile app~~ → iOS app via Capacitor in development

@@ -843,7 +843,7 @@ export default function Profile() {
                 key={avatar.id}
                 onClick={() => handleSelectAvatar(avatar.id)}
                 className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-all hover:scale-110 ${
-                  editedData.avatar_url === avatar.id
+                  (isEditing ? editedData.avatar_url : profile.avatar_url) === avatar.id
                     ? "bg-primary/20 ring-2 ring-primary"
                     : "bg-muted hover:bg-muted/80"
                 }`}

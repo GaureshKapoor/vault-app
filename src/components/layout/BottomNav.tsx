@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { Home, Inbox, BarChart3, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 import { VaultLogo } from "@/components/icons/VaultLogo";
 
 const navItems = [
@@ -24,13 +23,13 @@ export function BottomNav() {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const isVault = item.icon === "vault";
-          
+
           return (
             <NavLink
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors duration-200",
+                "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors duration-150",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -46,13 +45,13 @@ export function BottomNav() {
                 ) : (
                   <item.icon className="w-5 h-5" />
                 )}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
+                {/* Simple CSS-based active indicator for better performance */}
+                <div
+                  className={cn(
+                    "absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary transition-all duration-150",
+                    isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
+                  )}
+                />
               </div>
               <span className="text-xs font-medium">{item.label}</span>
             </NavLink>

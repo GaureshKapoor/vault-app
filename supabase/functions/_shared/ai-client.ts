@@ -14,7 +14,7 @@ const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 // Paid models (when ready):
 // - anthropic/claude-3.5-haiku ($0.25/1M tokens, best value)
 // - openai/gpt-4o-mini ($0.15/1M tokens, cheapest)
-const DEFAULT_MODEL = "meta-llama/llama-3.2-3b-instruct:free";
+const DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";

@@ -70,40 +70,36 @@ export function useAIOperations() {
 
 ---
 
-## Phase 3: AI Chat with Context
+## Phase 3: AI Chat with Context ✅ COMPLETE
 
-### 3.1 Create Chat Edge Function
+### 3.1 Create Chat Edge Function ✅
 **New File:** `supabase/functions/ai-chat/index.ts`
 
 - Accept message + conversation history
-- Fetch user's ideas for context
-- Support streaming (SSE)
-- Return structured actions when AI suggests edits
+- Fetch user's ideas for context (up to 20 non-archived)
+- Return AI response with full idea context
+- Calm, analytical, builder-native tone
 
-**System Prompt Tone:**
-- Calm, analytical, builder-native
-- Never auto-edit database
-- Always explain reasoning
-- Suggest improvements with clear before/after
-
-### 3.2 Rewrite AI.tsx
+### 3.2 Rewrite AI.tsx ✅
 **Modify:** `src/pages/AI.tsx`
 
-- Real chat with streaming responses
-- localStorage persistence for history
-- Parse AI responses for structured actions
+- Real chat with `useAIChat` hook
+- Loading states with "Thinking..." indicator
+- Timestamps on messages
+- Clear history button
+- Auto-scroll to new messages
 
-### 3.3 Create Chat Components
-**New Files:**
-- `src/components/ai/ActionCard.tsx` - Inline apply button for suggestions
-- `src/components/ai/ChatInput.tsx` - Input with quick action buttons
-
-### 3.4 Create Chat Hook
+### 3.3 Create Chat Hook ✅
 **New File:** `src/hooks/useAIChat.ts`
 
-- Handle streaming responses
-- Parse structured actions
-- Apply actions to database
+- localStorage persistence (max 50 messages)
+- Conversation history sent to AI (last 10)
+- Error handling with toast notifications
+- Clear history function
+
+### 3.4 Optional Components (Deferred to Phase 4)
+- `src/components/ai/ActionCard.tsx` - Inline apply button for suggestions
+- `src/components/ai/ChatInput.tsx` - Input with quick action buttons
 
 ---
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { MoreHorizontal, ChevronRight, Newspaper, Share, Plus, Archive, Loader2, ChevronDown, X, Trash2, CheckSquare, ArrowUpDown } from "lucide-react";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { VaultLogo, VaultLogoWithText } from "@/components/icons/VaultLogo";
 import { CATEGORIES_WITH_ALL } from "@/lib/categories";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,8 +107,8 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const fetchIdeas = async () => {
-    setIsLoading(true);
+  const fetchIdeas = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from("ideas")
@@ -125,9 +126,14 @@ export default function Home() {
         description: "Please try refreshing the page.",
       });
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  // Handler for pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    await fetchIdeas(false);
+  }, [fetchIdeas]);
 
   // Sort function
   const sortIdeas = (ideasToSort: Idea[]): Idea[] => {
@@ -550,22 +556,23 @@ export default function Home() {
         </div>
       )}
 
-      {/* Ideas List */}
-      <div className="px-4 py-4 space-y-3">
-        {/* Add New Idea Card */}
-        {!isSelectMode && (
-          <button 
-            onClick={() => navigate("/idea/new")}
-            className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/50 transition-all duration-200 group"
-          >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-              <Plus className="w-5 h-5 text-primary" />
-            </div>
-            <span className="text-muted-foreground group-hover:text-foreground font-medium transition-colors">Add new idea</span>
-          </button>
-        )}
+      {/* Ideas List with Pull-to-Refresh */}
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="px-4 py-4 space-y-3">
+          {/* Add New Idea Card */}
+          {!isSelectMode && (
+            <button
+              onClick={() => navigate("/idea/new")}
+              className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/50 transition-all duration-200 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Plus className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-muted-foreground group-hover:text-foreground font-medium transition-colors">Add new idea</span>
+            </button>
+          )}
 
-        {filteredIdeas.length === 0 ? (
+          {filteredIdeas.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-4">
               {showArchived 
@@ -692,7 +699,8 @@ export default function Home() {
             })}
           </AnimatePresence>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
     </div>
   );
 }

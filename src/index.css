@@ -125,13 +125,33 @@
     overscroll-behavior-y: auto;
     overscroll-behavior-x: none;
   }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* GPU acceleration for smoother animations on iOS */
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in {
+    will-change: opacity, transform;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
 }
 
 @layer utilities {
   .gradient-hero {
     background: var(--gradient-hero);
   }
-  
+
   .gradient-dark-hero {
     background: var(--gradient-dark-hero);
   }
@@ -144,7 +164,33 @@
   }
 
   .text-glow {
-    text-shadow: 0 0 20px hsl(var(--primary) / 0.5), 
+    text-shadow: 0 0 20px hsl(var(--primary) / 0.5),
                  0 0 40px hsl(var(--primary) / 0.3);
+  }
+
+  /* iOS Safe Area utilities */
+  .pt-safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .pb-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mt-safe-top {
+    margin-top: env(safe-area-inset-top, 0px);
+  }
+
+  .mb-safe-bottom {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Extended safe area padding (safe area + extra) */
+  .pt-safe-top-4 {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  }
+
+  .pb-safe-bottom-4 {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
 }

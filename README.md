@@ -12,11 +12,21 @@ Vault helps you transform scattered ideas into shipped products through a struct
 4. **Focus** - Commit to ONE idea at a time (building slot)
 5. **Ship** - Track progress through lifecycle stages
 
+## Platforms
+
+| Platform | Status | Landing Page |
+|----------|--------|--------------|
+| Web (Desktop/Tablet) | Active | Full |
+| Web (Mobile browser) | Active | Full |
+| iOS App | In Development | Minimal hero |
+
 ## Quick Start
 
 ### Prerequisites
 - Node.js 18+ (recommended: use [nvm](https://github.com/nvm-sh/nvm))
 - npm or bun
+- Xcode (for iOS development)
+- CocoaPods (for iOS development)
 
 ### Installation
 
@@ -37,6 +47,22 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:5173`
+
+### iOS Development
+
+```bash
+# Build web assets
+npm run build
+
+# Sync to iOS project
+npx cap sync ios
+
+# Open in Xcode
+npx cap open ios
+
+# Or run in simulator directly
+npx cap run ios
+```
 
 ### Environment Variables
 
@@ -62,11 +88,15 @@ Apply migrations in order from `supabase/migrations/`:
 3. Template ideas
 4. Sort order
 
-### Edge Functions
+### Edge Functions (7 deployed)
 Located in `supabase/functions/`:
-- `autofill-idea` - AI-powered field generation (needs AI provider)
-- `score-idea` - AI-powered idea evaluation (needs AI provider)
+- `autofill-idea` - AI generates idea fields from title/category
+- `score-idea` - AI scores idea 0-10 with reasoning
+- `ai-chat` - Conversational AI assistant
+- `create-checkout-session` - Stripe checkout (stubbed)
+- `delete-user` - Complete account deletion
 - `validate-status-change` - Lifecycle transition rules
+- `_shared/ai-client` - Reusable OpenRouter client
 
 ## Using Vault
 
@@ -103,39 +133,72 @@ idea → shortlisted → building → shipped
 
 ## Tech Stack
 
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Supabase (PostgreSQL, Auth, Edge Functions)
-- **State**: TanStack Query, React Router DOM
-- **Animations**: Framer Motion
+### Frontend
+- React 18.3, Vite 5.4, TypeScript 5.8
+- Tailwind CSS 3.4, shadcn/ui (50+ components)
+- Framer Motion 12.23 (animations)
+- TanStack Query 5.83 (data fetching)
+- React Router DOM 6.30 (routing)
+
+### Backend
+- Supabase (PostgreSQL, Auth, Edge Functions)
+- OpenRouter (AI provider - model agnostic)
+
+### Mobile
+- Capacitor 8.0 (iOS wrapper)
+
+## Features
+
+### Working
+- Email/password + Google OAuth authentication
+- Password reset via email
+- AI Autofill (generates idea fields from title/category)
+- AI Scoring (0-10 score with reasoning)
+- AI Chat Assistant (context-aware with user's ideas)
+- Profile editing with avatar picker
+- Idea CRUD with 6-state lifecycle
+- Dark/light theme
+
+### Stubbed
+- Payments (Stripe exists, checkout skipped - all users free tier)
+- Feed/community features
+- Export functionality
 
 ## Current Limitations
 
-- **AI features are stubbed** - Autofill and scoring show "Coming soon"
 - **Inbox is local-only** - Thoughts stored in localStorage
-- **Profile is read-only** - Can't update display name or avatar
-- **No password reset** - Account recovery not implemented
-- **Web only** - No native mobile app yet
+- **No email verification** - Auto-confirm enabled
+- **Notes are append-only** - Can't edit or delete
+- **Payments stubbed** - All users get free tier
 
 ## Project Structure
 
 ```
-src/
-├── pages/           # Route components
-├── components/      # Reusable UI
-│   ├── layout/      # App shell, navigation
-│   └── ui/          # shadcn/ui primitives
-├── hooks/           # Custom React hooks
-├── integrations/    # Supabase client
-└── lib/             # Utilities
-
-supabase/
-├── migrations/      # Database schema
-└── functions/       # Edge functions
+vault-app/
+├── src/
+│   ├── pages/           # Route components
+│   │   ├── WebLanding.tsx   # Full landing (web)
+│   │   ├── IOSLanding.tsx   # Minimal landing (iOS app)
+│   │   └── ...
+│   ├── components/      # Reusable UI
+│   │   ├── layout/      # App shell, navigation
+│   │   └── ui/          # shadcn/ui primitives
+│   ├── hooks/           # Custom React hooks
+│   ├── integrations/    # Supabase client
+│   └── lib/             # Utilities
+│       └── platform.ts  # Platform detection (isIOSApp, isWebBrowser)
+├── ios/                 # Capacitor iOS project (Xcode)
+├── supabase/
+│   ├── migrations/      # Database schema
+│   └── functions/       # Edge functions
+├── plans/               # Feature implementation plans
+└── capacitor.config.ts  # iOS app configuration
 ```
 
 ## Documentation
 
 - [PRD.md](PRD.md) - Product requirements and feature scope
+- [plans/web-vs-ios.md](plans/web-vs-ios.md) - Platform strategy
 - [.claude/CLAUDE.md](.claude/CLAUDE.md) - Claude Code working instructions
 
 ## Contributing

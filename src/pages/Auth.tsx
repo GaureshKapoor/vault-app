@@ -7,6 +7,8 @@ import { VaultLogoWithText, VaultLogo } from "@/components/icons/VaultLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { isNativeApp } from "@/lib/platform";
+import { Browser } from "@capacitor/browser";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -136,10 +138,12 @@ export default function Auth() {
 
         if (error) {
           if (error.message.includes("Invalid login")) {
+            // Supabase returns same error for wrong password and OAuth-only accounts
+            // Always hint about Google since we can't distinguish
             toast({
               variant: "destructive",
               title: "Invalid credentials",
-              description: "Email or password is incorrect.",
+              description: "Email or password is incorrect. If you signed up with Google, use the Google button instead.",
             });
           } else {
             throw error;
@@ -163,14 +167,33 @@ export default function Auth() {
   const handleGoogleAuth = async () => {
     setIsGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-        },
-      });
+      if (isNativeApp()) {
+        // For native apps, use in-app browser with deep link callback
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: "com.gaureshkapoor.vault://auth/callback",
+            skipBrowserRedirect: true,
+          },
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+
+        if (data?.url) {
+          // Open OAuth URL in in-app browser
+          await Browser.open({ url: data.url });
+        }
+      } else {
+        // For web, use standard redirect
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/auth`,
+          },
+        });
+
+        if (error) throw error;
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Something went wrong";
       toast({

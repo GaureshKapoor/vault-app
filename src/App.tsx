@@ -6,10 +6,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { DeepLinkHandler } from "@/components/DeepLinkHandler";
 
 // Pages
 import WebLanding from "./pages/WebLanding";
+import IOSLanding from "./pages/IOSLanding";
 import AppStart from "./pages/AppStart";
+
+// Platform detection
+import { isIOSApp } from "@/lib/platform";
 import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
 import OnboardingSetup from "./pages/OnboardingSetup";
@@ -50,9 +55,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <DeepLinkHandler />
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<WebLanding />} />
+          <Route path="/" element={isIOSApp() ? <IOSLanding /> : <WebLanding />} />
           <Route path="/app" element={<AppStart />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/pricing" element={<Pricing />} />
