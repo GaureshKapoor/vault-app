@@ -827,6 +827,23 @@ export default function Profile() {
                 View
               </Button>
             </div>
+            <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <span className="font-medium text-foreground">How to use Vault</span>
+                <p className="text-xs text-muted-foreground">Step-by-step guide showing how each page fits together.</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary"
+                onClick={() => navigate("/guide", { state: { from: "profile" } })}
+              >
+                View
+              </Button>
+            </div>
           </div>
         </motion.section>
 

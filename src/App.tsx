@@ -27,6 +27,7 @@ import Progress from "./pages/Progress";
 import Progress2 from "./pages/Progress2";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
+import HowToUseGuide from "./pages/HowToUseGuide";
 import Profile from "./pages/Profile";
 import Feed from "./pages/Feed";
 import StartBuilding from "./pages/StartBuilding";
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/onboarding/setup" element={<OnboardingSetup />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsConditions />} />
+          <Route path="/guide" element={<HowToUseGuide />} />
           
           {/* Protected App Routes with Bottom Nav */}
           <Route element={<AppLayout />}>

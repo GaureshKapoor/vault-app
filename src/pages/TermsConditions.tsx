@@ -93,6 +93,9 @@ export default function TermsConditions() {
             <Link to="/privacy" state={{ from: origin }} className="hover:underline">
               View Privacy Policy
             </Link>
+            <Link to="/guide" state={{ from: origin }} className="hover:underline">
+              How Vault Works
+            </Link>
             <button onClick={handleReturn} className="hover:underline">
               Return to Vault
             </button>
