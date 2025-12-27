@@ -24,7 +24,6 @@ import NewIdea from "./pages/NewIdea";
 import Inbox from "./pages/Inbox";
 import AI from "./pages/AI";
 import Progress from "./pages/Progress";
-import Progress2 from "./pages/Progress2";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import HowToUseGuide from "./pages/HowToUseGuide";
@@ -77,7 +76,6 @@ const App = () => (
             <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
-            <Route path="/progress2" element={<ProtectedRoute><Progress2 /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/idea/new" element={<ProtectedRoute><NewIdea /></ProtectedRoute>} />
             <Route path="/idea/:id" element={<ProtectedRoute><IdeaDetail /></ProtectedRoute>} />
