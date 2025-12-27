@@ -28,21 +28,6 @@ export default function Progress() {
   const [ideas, setIdeas] = useState<IdeaProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const checkAuthAndFetch = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/auth", { replace: true });
-        return;
-      }
-
-      fetchIdeas();
-    };
-
-    checkAuthAndFetch();
-  }, [navigate]);
-
   const fetchIdeas = async () => {
     try {
       const { data, error } = await supabase
@@ -59,6 +44,21 @@ export default function Progress() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const checkAuthAndFetch = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+
+      fetchIdeas();
+    };
+
+    checkAuthAndFetch();
+  }, [navigate]);
 
   // Group ideas by status
   const groupedIdeas = statusOrder.reduce((acc, status) => {
