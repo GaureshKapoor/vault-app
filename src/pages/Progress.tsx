@@ -28,7 +28,31 @@ interface IdeaDetails {
   check_deployable_mvp: boolean | null;
 }
 
-const statusOrder: VisibleStatus[] = ["building", "shortlisted", "idea", "paused", "shipped"];
+const statusOrder: VisibleStatus[] = ["idea", "shortlisted", "building", "shipped", "paused"];
+
+// Filter button colors matching status badge colors
+const filterButtonStyles: Record<VisibleStatus, { active: string; inactive: string }> = {
+  idea: {
+    active: "bg-purple-600 text-white dark:bg-purple-500",
+    inactive: "bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50",
+  },
+  shortlisted: {
+    active: "bg-amber-500 text-white dark:bg-amber-500",
+    inactive: "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50",
+  },
+  building: {
+    active: "bg-emerald-600 text-white dark:bg-emerald-500",
+    inactive: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50",
+  },
+  shipped: {
+    active: "bg-blue-600 text-white dark:bg-blue-500",
+    inactive: "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
+  },
+  paused: {
+    active: "bg-slate-600 text-white dark:bg-slate-500",
+    inactive: "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:bg-slate-700/50",
+  },
+};
 const statusLabels: Record<IdeaStatus, string> = {
   idea: "Idea",
   shortlisted: "Shortlisted",
@@ -348,6 +372,34 @@ export default function Progress() {
           </div>
         </section>
 
+        {/* Activity timeline */}
+        <section className="bg-card border border-border rounded-2xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase text-muted-foreground">Recent activity</p>
+              <h2 className="text-lg font-semibold text-foreground">Lifecycle timeline</h2>
+            </div>
+            <CalendarClock className="w-5 h-5 text-primary" />
+          </div>
+          <div className="mt-4 space-y-4">
+            {timelineEvents.length === 0 && (
+              <p className="text-sm text-muted-foreground">No lifecycle movement yet. Once ideas move stages, you'll see a story here.</p>
+            )}
+            {timelineEvents.map((event) => (
+              <div key={event.id} className="flex flex-col gap-1 border-b border-border pb-4 last:border-b-0 last:pb-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={statusLabels[event.status]} />
+                    <span className="font-medium text-foreground">{event.title}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{formatRelativeTime(event.timestamp)}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">{event.summary}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Status Filter Row */}
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -373,8 +425,8 @@ export default function Progress() {
                 className={cn(
                   "px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all",
                   selectedStatus === status
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    ? filterButtonStyles[status].active
+                    : filterButtonStyles[status].inactive
                 )}
               >
                 {statusLabels[status]} ({groupedIdeas[status]?.length || 0})
@@ -486,34 +538,6 @@ export default function Progress() {
               </motion.section>
             );
           })}
-        </section>
-
-        {/* Activity timeline */}
-        <section className="bg-card border border-border rounded-2xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase text-muted-foreground">Recent activity</p>
-              <h2 className="text-lg font-semibold text-foreground">Lifecycle timeline</h2>
-            </div>
-            <CalendarClock className="w-5 h-5 text-primary" />
-          </div>
-          <div className="mt-4 space-y-4">
-            {timelineEvents.length === 0 && (
-              <p className="text-sm text-muted-foreground">No lifecycle movement yet. Once ideas move stages, you'll see a story here.</p>
-            )}
-            {timelineEvents.map((event) => (
-              <div key={event.id} className="flex flex-col gap-1 border-b border-border pb-4 last:border-b-0 last:pb-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={statusLabels[event.status]} />
-                    <span className="font-medium text-foreground">{event.title}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{formatRelativeTime(event.timestamp)}</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{event.summary}</p>
-              </div>
-            ))}
-          </div>
         </section>
       </div>
     </div>

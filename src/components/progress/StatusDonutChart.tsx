@@ -17,7 +17,7 @@ const statusColors: Record<VisibleStatus, string> = {
   shipped: "hsl(199, 89%, 48%)",     // blue
 };
 
-const statusOrder: VisibleStatus[] = ["building", "shortlisted", "idea", "paused", "shipped"];
+const statusOrder: VisibleStatus[] = ["idea", "shortlisted", "building", "shipped", "paused"];
 
 const sizeConfig = {
   sm: { height: 120, innerRadius: 30, outerRadius: 48 },

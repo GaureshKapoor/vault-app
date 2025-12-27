@@ -25,7 +25,7 @@ const statusLabels: Record<VisibleStatus, string> = {
   shipped: "Shipped",
 };
 
-const statusOrder: VisibleStatus[] = ["building", "shortlisted", "idea", "paused", "shipped"];
+const statusOrder: VisibleStatus[] = ["idea", "shortlisted", "building", "shipped", "paused"];
 
 interface CustomTooltipProps {
   active?: boolean;
