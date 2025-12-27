@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,31 @@ serve(async (req) => {
   }
 
   try {
+    // Verify user authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = user.id; // Derived from JWT, not client
+
     const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
     if (!STRIPE_SECRET_KEY) {
       console.error("STRIPE_SECRET_KEY not configured");
@@ -22,11 +48,11 @@ serve(async (req) => {
       );
     }
 
-    const { priceId, userId, successUrl, cancelUrl } = await req.json();
+    const { priceId, successUrl, cancelUrl } = await req.json();
 
-    if (!priceId || !userId) {
+    if (!priceId) {
       return new Response(
-        JSON.stringify({ error: "priceId and userId are required" }),
+        JSON.stringify({ error: "priceId is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

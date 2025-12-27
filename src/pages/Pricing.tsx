@@ -175,7 +175,6 @@ export default function Pricing() {
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
           priceId: STRIPE_PRICE_ID,
-          userId: user.id,
           successUrl: `${window.location.origin}/pricing?success=true`,
           cancelUrl: `${window.location.origin}/pricing?canceled=true`,
         },

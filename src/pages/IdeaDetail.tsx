@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Edit2, Check, X, Rocket, Target, Lightbulb, Layers, Share, Loader2, Save, Sparkles, Trash2, Lock, Unlock, RotateCcw, Zap } from "lucide-react";
+import { ArrowLeft, Edit2, Check, X, Rocket, Target, Lightbulb, Layers, Share, Loader2, Save, Sparkles, Trash2, Lock, Unlock, RotateCcw, Zap, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, STATUS_OPTIONS, IdeaStatus as StatusBadgeStatus } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
-import { useAIOperations, type AutofillResult, type ScoreResult } from "@/hooks/useAIOperations";
+import { useAIOperations, type AutofillResult, type ScoreResult, type NameSuggestion, type PitchSuggestion } from "@/hooks/useAIOperations";
 import { AutofillPreviewDialog } from "@/components/ai/AutofillPreviewDialog";
 import {
   AlertDialog,
@@ -27,6 +27,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type IdeaStatus = "idea" | "shortlisted" | "building" | "paused" | "shipped" | "archived";
 
@@ -113,7 +124,7 @@ export default function IdeaDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { autofillIdea, scoreIdea, isLoading: isAILoading } = useAIOperations();
+  const { autofillIdea, scoreIdea, suggestName, draftPitch, isLoading: isAILoading, isSuggestingName, isDraftingPitch } = useAIOperations();
 
   const [idea, setIdea] = useState<Idea | null>(null);
   const [notes, setNotes] = useState<IdeaNote[]>([]);
@@ -128,6 +139,10 @@ export default function IdeaDetail() {
   const [autofillSuggestions, setAutofillSuggestions] = useState<AutofillResult | null>(null);
   const [showAutofillDialog, setShowAutofillDialog] = useState(false);
   const [isScoring, setIsScoring] = useState(false);
+  const [nameSuggestions, setNameSuggestions] = useState<NameSuggestion[]>([]);
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+  const [pitchSuggestions, setPitchSuggestions] = useState<PitchSuggestion[]>([]);
+  const [showPitchSuggestions, setShowPitchSuggestions] = useState(false);
 
   // Track if this is the first navigation from onboarding
   const fromOnboarding = searchParams.get("fromOnboarding") === "true";
@@ -190,19 +205,28 @@ export default function IdeaDetail() {
 
     setIsSaving(true);
     try {
+      // If this was a template, convert it to a user-owned idea
+      const updatesToApply = idea?.is_template
+        ? { ...pendingUpdates, is_template: false, sort_order: null }
+        : pendingUpdates;
+
       const { error } = await supabase
         .from("ideas")
-        .update(pendingUpdates)
+        .update(updatesToApply)
         .eq("id", id);
 
       if (error) throw error;
 
-      setIdea((prev) => prev ? { ...prev, ...pendingUpdates } : prev);
+      setIdea((prev) => prev ? { ...prev, ...updatesToApply } : prev);
       setPendingUpdates({});
       setIsEditing(false);
+
+      const wasTemplate = idea?.is_template;
       toast({
-        title: "Changes saved",
-        description: "Your idea has been updated.",
+        title: wasTemplate ? "It's yours now!" : "Changes saved",
+        description: wasTemplate
+          ? "This idea is now yours and has been updated."
+          : "Your idea has been updated.",
       });
     } catch (error) {
       console.error("Error saving changes:", error);
@@ -413,6 +437,111 @@ export default function IdeaDetail() {
         title: "Error archiving",
         description: "Could not archive idea. Please try again.",
       });
+    }
+  };
+
+  const handleSuggestName = async () => {
+    if (!idea) return;
+
+    const result = await suggestName({
+      main_idea: idea.main_idea || idea.description || undefined,
+      description: idea.description || undefined,
+      category: idea.category || undefined,
+      core_problem: idea.core_problem || undefined,
+    });
+
+    if (result) {
+      setNameSuggestions(result);
+      setShowNameSuggestions(true);
+    }
+  };
+
+  const handleSelectName = async (name: string) => {
+    setShowNameSuggestions(false);
+
+    if (isEditing) {
+      // If editing, just update the pending updates (will save when user clicks Save)
+      handleFieldUpdate("title", name);
+      toast({
+        title: "Name selected",
+        description: `Click Save to apply "${name}"`,
+      });
+    } else {
+      // If not editing, save directly to database
+      try {
+        const { error } = await supabase
+          .from("ideas")
+          .update({ title: name })
+          .eq("id", id);
+
+        if (error) throw error;
+
+        setIdea((prev) => prev ? { ...prev, title: name } : prev);
+        toast({
+          title: "Name updated",
+          description: `Project name set to "${name}"`,
+        });
+      } catch (error) {
+        console.error("Error updating name:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not update name. Please try again.",
+        });
+      }
+    }
+  };
+
+  const handleDraftPitch = async () => {
+    if (!idea) return;
+
+    const result = await draftPitch({
+      title: idea.title,
+      category: idea.category || undefined,
+      description: idea.main_idea || idea.description || undefined,
+      core_problem: idea.core_problem || undefined,
+      core_value_proposition: idea.core_value_proposition || undefined,
+    });
+
+    if (result) {
+      setPitchSuggestions(result);
+      setShowPitchSuggestions(true);
+    }
+  };
+
+  const handleSelectPitch = async (pitch: string) => {
+    setShowPitchSuggestions(false);
+
+    if (isEditing) {
+      // If editing, just update the pending updates (will save when user clicks Save)
+      handleFieldUpdate("main_idea", pitch);
+      toast({
+        title: "Pitch selected",
+        description: `Click Save to apply the new pitch.`,
+      });
+    } else {
+      // If not editing, save directly to database
+      try {
+        const { error } = await supabase
+          .from("ideas")
+          .update({ main_idea: pitch })
+          .eq("id", id);
+
+        if (error) throw error;
+
+        setIdea((prev) => prev ? { ...prev, main_idea: pitch } : prev);
+        toast({
+          title: "Pitch updated",
+          description: "Your 1-liner has been updated.",
+        });
+      } catch (error) {
+        console.error("Error updating pitch:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not update pitch. Please try again.",
+        });
+      }
     }
   };
 
@@ -729,17 +858,40 @@ export default function IdeaDetail() {
           className="space-y-3"
         >
           <div className="flex items-center gap-3 flex-wrap">
-            {isEditing ? (
-              <input
-                type="text"
-                defaultValue={idea.title}
-                onChange={(e) => handleFieldUpdate("title", e.target.value)}
-                className="text-2xl font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none flex-1 min-w-0"
-                placeholder="Project name"
-              />
-            ) : (
-              <h1 className="text-2xl font-bold text-foreground">{idea.title}</h1>
-            )}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {isEditing ? (
+                <input
+                  type="text"
+                  defaultValue={idea.title}
+                  onChange={(e) => handleFieldUpdate("title", e.target.value)}
+                  className="text-2xl font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none flex-1 min-w-0"
+                  placeholder="Project name"
+                />
+              ) : (
+                <h1 className="text-2xl font-bold text-foreground">{idea.title}</h1>
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSuggestName}
+                    disabled={isSuggestingName}
+                    className="shrink-0"
+                  >
+                    {isSuggestingName ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="w-4 h-4 text-primary" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Suggest project name</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             {isEditing ? (
               <select
                 defaultValue={idea.category || ""}
@@ -760,21 +912,46 @@ export default function IdeaDetail() {
             )}
           </div>
           <div className={cn(
-            "bg-primary-soft rounded-xl p-4 border border-primary/10",
+            "bg-primary-soft rounded-xl p-4 border border-primary/10 relative",
             isEditing && "ring-2 ring-primary/20"
           )}>
-            {isEditing ? (
-              <textarea
-                defaultValue={idea.main_idea || idea.description || ""}
-                onChange={(e) => handleFieldUpdate("main_idea", e.target.value)}
-                className="w-full bg-transparent text-foreground leading-relaxed resize-none focus:outline-none min-h-[60px]"
-                placeholder="Main idea sentence..."
-              />
-            ) : (
-              <p className="text-foreground leading-relaxed">
-                {idea.main_idea || idea.description || "No description provided"}
-              </p>
-            )}
+            <div className="flex items-start gap-2">
+              <div className="flex-1">
+                {isEditing ? (
+                  <textarea
+                    defaultValue={idea.main_idea || idea.description || ""}
+                    onChange={(e) => handleFieldUpdate("main_idea", e.target.value)}
+                    className="w-full bg-transparent text-foreground leading-relaxed resize-none focus:outline-none min-h-[60px]"
+                    placeholder="Main idea sentence..."
+                  />
+                ) : (
+                  <p className="text-foreground leading-relaxed">
+                    {idea.main_idea || idea.description || "No description provided"}
+                  </p>
+                )}
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleDraftPitch}
+                    disabled={isDraftingPitch}
+                    className="shrink-0 h-8 w-8"
+                  >
+                    {isDraftingPitch ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 text-primary" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Draft Pitch</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </motion.section>
 
@@ -800,7 +977,7 @@ export default function IdeaDetail() {
                 ) : (
                   <Zap className="w-3.5 h-3.5" />
                 )}
-                {isScoring ? "Scoring..." : "Score"}
+                {isScoring ? "Scoring..." : idea.ai_score !== null ? "Re-score" : "Score"}
               </Button>
               <Button
                 variant="outline"
@@ -814,7 +991,7 @@ export default function IdeaDetail() {
                 ) : (
                   <Sparkles className="w-3.5 h-3.5" />
                 )}
-                {isAILoading && !isScoring ? "Generating..." : "Autofill"}
+                {isAILoading && !isScoring ? "Generating..." : (idea.core_problem && idea.core_value_proposition) ? "Re-autofill" : "Autofill"}
               </Button>
             </div>
           </div>
@@ -1106,6 +1283,54 @@ export default function IdeaDetail() {
         }}
         onApply={handleApplyAutofill}
       />
+
+      {/* AI Name Suggestions Dialog */}
+      <Dialog open={showNameSuggestions} onOpenChange={setShowNameSuggestions}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wand2 className="w-5 h-5 text-primary" />
+              AI Name Suggestions
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {nameSuggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelectName(suggestion.name)}
+                className="w-full text-left p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all"
+              >
+                <p className="font-semibold text-foreground">{suggestion.name}</p>
+                <p className="text-sm text-muted-foreground mt-1">{suggestion.reason}</p>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Pitch Suggestions Dialog */}
+      <Dialog open={showPitchSuggestions} onOpenChange={setShowPitchSuggestions}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Draft Pitch
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {pitchSuggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelectPitch(suggestion.pitch)}
+                className="w-full text-left p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all"
+              >
+                <p className="text-foreground leading-relaxed">{suggestion.pitch}</p>
+                <p className="text-xs text-muted-foreground mt-2 uppercase tracking-wide">{suggestion.tone}</p>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

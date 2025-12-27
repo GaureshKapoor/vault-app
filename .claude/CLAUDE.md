@@ -115,7 +115,79 @@ supabase/
 
 ### Known Dependencies
 - Supabase (currently using Lovable-provisioned instance)
-- AI functions depend on Lovable AI Gateway (will need replacement)
+- AI functions use OpenRouter API (OPENROUTER_API_KEY env var)
+
+---
+
+## Edge Function Authentication Pattern
+
+All Supabase Edge Functions that need user authentication follow this pattern:
+
+### Why Manual JWT Validation?
+Setting `verify_jwt = true` in function config causes ALL requests to fail with 401 (Supabase middleware issue). Instead, we keep `verify_jwt = false` and validate JWTs manually inside each function. This is equally secure.
+
+### Server-Side Pattern (Edge Functions)
+```typescript
+// 1. Check for auth header
+const authHeader = req.headers.get("Authorization");
+if (!authHeader) {
+  return new Response(
+    JSON.stringify({ error: "Missing authorization header" }),
+    { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
+// 2. Create authenticated Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  global: { headers: { Authorization: authHeader } },
+});
+
+// 3. Validate the token by getting the user
+const { data: { user }, error: userError } = await supabase.auth.getUser();
+if (userError || !user) {
+  return new Response(
+    JSON.stringify({ error: "Unauthorized" }),
+    { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+```
+
+### Client-Side Pattern (useAIOperations hook)
+```typescript
+// Before calling any AI Edge Function, validate session
+const hasValidSession = await ensureValidSession();
+if (!hasValidSession) {
+  toast({ title: "Session expired", ... });
+  window.location.href = '/auth';
+  return null;
+}
+```
+
+### CRITICAL: Adding New Edge Functions
+
+When creating a new Edge Function, you MUST add it to `supabase/config.toml`:
+
+```toml
+[functions.your-new-function]
+verify_jwt = false
+```
+
+**Why this is required:** Without this config entry, Supabase's middleware blocks the Authorization header from being passed to the function, causing "Missing authorization header" 401 errors even though the client is sending the header correctly.
+
+**Checklist for new Edge Functions:**
+1. Create the function in `supabase/functions/your-function/index.ts`
+2. Add the function to `supabase/config.toml` with `verify_jwt = false`
+3. Deploy with `supabase functions deploy your-function`
+4. Test the function works before marking the task complete
+
+### Troubleshooting 401 Errors
+If AI features return "Unauthorized" or 401:
+1. **Check `supabase/config.toml`** - Is the function listed? This is the #1 cause!
+2. **Sign out and sign back in** - Gets a fresh JWT token
+3. Check browser console for "Invalid refresh token" errors
+4. Clear localStorage and re-authenticate if issues persist
+
+The client at `src/integrations/supabase/client.ts` has global error handling for invalid refresh tokens.
 
 ## Communication Style
 

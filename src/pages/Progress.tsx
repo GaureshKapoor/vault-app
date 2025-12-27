@@ -5,9 +5,16 @@ import { AlertTriangle, CalendarClock, ChevronRight, Loader2, Sparkles, Trending
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { StatusBadge, STATUS_OPTIONS, IdeaStatus as StatusBadgeStatus } from "@/components/ui/status-badge";
 import { StatusDonutChart, StatusBarChart, ProgressRing } from "@/components/progress";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type IdeaStatus = "idea" | "shortlisted" | "building" | "paused" | "shipped" | "archived";
 type VisibleStatus = Exclude<IdeaStatus, "archived">;
@@ -126,9 +133,43 @@ type FilterStatus = VisibleStatus | "all";
 
 export default function Progress() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [ideas, setIdeas] = useState<IdeaDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("all");
+  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("idea");
+
+  // Format status for display
+  const formatStatus = (status: IdeaStatus): StatusBadgeStatus => {
+    return (status.charAt(0).toUpperCase() + status.slice(1)) as StatusBadgeStatus;
+  };
+
+  // Update idea status
+  const handleStatusChange = async (ideaId: string, newStatus: IdeaStatus) => {
+    try {
+      const { error } = await supabase
+        .from("ideas")
+        .update({ status: newStatus })
+        .eq("id", ideaId);
+
+      if (error) throw error;
+
+      setIdeas(prev => prev.map(idea =>
+        idea.id === ideaId ? { ...idea, status: newStatus } : idea
+      ));
+
+      toast({
+        title: "Status updated",
+        description: `Idea moved to ${formatStatus(newStatus)}`,
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error updating status",
+        description: "Please try again.",
+      });
+    }
+  };
 
   const fetchIdeas = async () => {
     try {
@@ -139,6 +180,7 @@ export default function Progress() {
           "id, title, status, difficulty, priority, sprint_fit, ai_score, ai_reasoning, updated_at, created_at, check_clear_problem, check_simple_loop, check_deployable_mvp"
         )
         .neq("status", "archived")
+        .eq("is_template", false)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -230,7 +272,6 @@ export default function Progress() {
     <div className="bg-background min-h-screen">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Lifecycle Coach</p>
           <h1 className="text-xl font-bold text-foreground">Progress overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Keep one idea in focus, prep the next, and unstick anything idle.
@@ -389,8 +430,29 @@ export default function Progress() {
               <div key={event.id} className="flex flex-col gap-1 border-b border-border pb-4 last:border-b-0 last:pb-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <StatusBadge status={statusLabels[event.status]} />
-                    <span className="font-medium text-foreground">{event.title}</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <span>
+                          <StatusBadge status={statusLabels[event.status]} interactive />
+                        </span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        {STATUS_OPTIONS.map((option) => (
+                          <DropdownMenuItem
+                            key={option.value}
+                            onClick={() => handleStatusChange(event.id, option.value.toLowerCase() as IdeaStatus)}
+                            className={cn(
+                              event.status === option.value.toLowerCase() && "bg-accent"
+                            )}
+                          >
+                            <StatusBadge status={option.value} className="pointer-events-none" />
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Link to={`/idea/${event.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+                      {event.title}
+                    </Link>
                   </div>
                   <span className="text-xs text-muted-foreground">{formatRelativeTime(event.timestamp)}</span>
                 </div>

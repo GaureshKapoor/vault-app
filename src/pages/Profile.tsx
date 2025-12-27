@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Briefcase, Target, Clock, Settings, LogOut, Trash2, Sun, Moon, Pencil, X, Check, IdCard, CreditCard, Sparkles, BookOpen, FileText } from "lucide-react";
+import { User, Mail, Briefcase, Target, Clock, Settings, LogOut, Trash2, Sun, Moon, Pencil, X, Check, IdCard, CreditCard, Sparkles, BookOpen, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -436,7 +436,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="flex-1 bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }

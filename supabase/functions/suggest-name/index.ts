@@ -7,16 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface AutofillResult {
-  description: string;
-  core_problem: string;
-  core_value_proposition: string;
-  core_loop: string;
-  mvp_shape: string;
-  target_user: string;
-  difficulty: number;
-  priority: number;
-  sprint_fit: number;
+interface NameSuggestion {
+  name: string;
+  reason: string;
+}
+
+interface SuggestNameResult {
+  suggestions: NameSuggestion[];
 }
 
 serve(async (req) => {
@@ -48,47 +45,51 @@ serve(async (req) => {
       );
     }
 
-    const { title, category, main_idea } = await req.json();
+    const { main_idea, description, category, core_problem } = await req.json();
 
-    console.log("Autofill request received:", { title, category, main_idea });
+    console.log("Suggest name request received:", { main_idea, description, category, core_problem });
 
-    if (!title && !main_idea) {
+    if (!main_idea && !description && !core_problem) {
       return new Response(
-        JSON.stringify({ error: "At least title or main_idea is required" }),
+        JSON.stringify({ error: "At least one of main_idea, description, or core_problem is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const systemPrompt = `You are a startup idea analyst. Given a project name, category, and main idea sentence, generate detailed fields for the idea. Be concise but insightful.
+    const systemPrompt = `You are a creative startup naming expert. Given context about a project idea, suggest 3 catchy, memorable project names.
 
-Return a JSON object with these exact fields:
-- description: A 1-2 sentence expanded description of the idea
-- core_problem: The specific problem this solves (1-2 sentences)
-- core_value_proposition: The unique value this provides to users (1-2 sentences)
-- core_loop: The main user action loop (e.g., "User does X → Gets Y → Returns for Z")
-- mvp_shape: What the minimum viable product looks like (1-2 sentences)
-- target_user: Who the ideal user is (1 sentence)
-- difficulty: 1-5 scale (1=very easy, 5=very hard to build)
-- priority: 1-5 scale (1=low, 5=high priority)
-- sprint_fit: 1-5 scale (how well it fits a sprint - 1=doesn't fit, 5=perfect fit)
+Good project names are:
+- Short (1-2 words, max 3)
+- Easy to spell and pronounce
+- Memorable and unique
+- Evocative of the product's purpose or feeling
+- Modern and professional
+
+Return a JSON object with this exact structure:
+{
+  "suggestions": [
+    { "name": "Name1", "reason": "Brief reason why this name works (1 sentence)" },
+    { "name": "Name2", "reason": "Brief reason why this name works (1 sentence)" },
+    { "name": "Name3", "reason": "Brief reason why this name works (1 sentence)" }
+  ]
+}
 
 Only return valid JSON, no markdown or explanation.`;
 
-    const userPrompt = `Project: ${title || "Untitled"}
-Category: ${category || "General"}
-Main Idea: ${main_idea || "No description provided"}`;
+    const contextParts = [];
+    if (main_idea) contextParts.push(`Main Idea: ${main_idea}`);
+    if (description) contextParts.push(`Description: ${description}`);
+    if (category) contextParts.push(`Category: ${category}`);
+    if (core_problem) contextParts.push(`Problem it solves: ${core_problem}`);
 
-    const result = await jsonCompletion<AutofillResult>([
+    const userPrompt = contextParts.join("\n");
+
+    const result = await jsonCompletion<SuggestNameResult>([
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
-    ], { temperature: 0.7 });
+    ], { temperature: 0.9 });
 
-    // Validate and clamp numeric values
-    result.difficulty = Math.min(5, Math.max(1, Math.round(result.difficulty)));
-    result.priority = Math.min(5, Math.max(1, Math.round(result.priority)));
-    result.sprint_fit = Math.min(5, Math.max(1, Math.round(result.sprint_fit)));
-
-    console.log("Autofill complete:", result);
+    console.log("Name suggestions complete:", result);
 
     return new Response(
       JSON.stringify(result),
@@ -96,7 +97,7 @@ Main Idea: ${main_idea || "No description provided"}`;
     );
 
   } catch (error) {
-    console.error("Autofill error:", error);
+    console.error("Suggest name error:", error);
 
     if (isAIError(error)) {
       return new Response(

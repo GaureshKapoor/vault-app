@@ -48,15 +48,7 @@ export function useAuthGuard() {
         if (!hasSubscription) {
           navigate("/pricing", { replace: true });
         } else if (!hasCompletedOnboarding) {
-          // Has subscription but didn't finish onboarding -> reset and go to pricing
-          await supabase
-            .from("profiles")
-            .update({
-              subscription_status: "none",
-              subscription_tier: null,
-              trial_ends_at: null,
-            })
-            .eq("user_id", user.id);
+          // Has subscription but didn't finish onboarding -> send to complete it
           navigate("/pricing", { replace: true });
         }
 

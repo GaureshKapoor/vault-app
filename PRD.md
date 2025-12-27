@@ -67,7 +67,11 @@ Current behavior: Pricing page exists, Stripe checkout stubbed. All users receiv
 - **AI Autofill**: Generates problem, value prop, loop, MVP, target user from title + category
 - **AI Scoring**: Returns 0-10 score with reasoning, suggests difficulty/priority/sprint fit
 - **AI Chat Assistant**: Conversational AI with context from user's ideas (top 20 non-archived)
-- **AI Provider**: OpenRouter (model-agnostic, currently using LLaMA 3.2, configurable via env)
+- **AI Name Suggestion**: Suggests 3 project names with reasoning (wand icon next to title)
+- **AI Pitch Drafting**: Generates 3 compelling 1-liner descriptions with different tones
+- **AI Provider**: OpenRouter (model-agnostic, currently using LLaMA 3.3 70B, configurable via env)
+
+**Authentication Pattern**: Edge Functions use manual JWT validation (not `verify_jwt = true` in config which has middleware issues). Each function validates the `Authorization` header by calling `supabase.auth.getUser()`. If users get 401 errors, they should sign out and back in to refresh their JWT token.
 
 #### Idea Management
 - **Create**: Title, category, description, core fields (problem, value prop, loop, MVP, target user)

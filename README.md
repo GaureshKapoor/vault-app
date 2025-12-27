@@ -88,15 +88,25 @@ Apply migrations in order from `supabase/migrations/`:
 3. Template ideas
 4. Sort order
 
-### Edge Functions (7 deployed)
+### Edge Functions (9 deployed)
 Located in `supabase/functions/`:
 - `autofill-idea` - AI generates idea fields from title/category
 - `score-idea` - AI scores idea 0-10 with reasoning
 - `ai-chat` - Conversational AI assistant
+- `suggest-name` - AI suggests project names
+- `draft-pitch` - AI drafts 1-liner descriptions
 - `create-checkout-session` - Stripe checkout (stubbed)
 - `delete-user` - Complete account deletion
 - `validate-status-change` - Lifecycle transition rules
 - `_shared/ai-client` - Reusable OpenRouter client
+
+### Edge Function Authentication
+All Edge Functions use manual JWT validation (not `verify_jwt = true` config which has issues). Each function:
+1. Checks for `Authorization` header
+2. Creates an authenticated Supabase client with that header
+3. Calls `supabase.auth.getUser()` to validate the token
+
+If AI features return 401 errors, **sign out and sign back in** to get a fresh JWT token. See [CLAUDE.md](.claude/CLAUDE.md) for the full auth pattern.
 
 ## Using Vault
 

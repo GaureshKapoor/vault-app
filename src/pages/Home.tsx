@@ -138,23 +138,7 @@ export default function Home() {
   // Sort function
   const sortIdeas = (ideasToSort: Idea[]): Idea[] => {
     return [...ideasToSort].sort((a, b) => {
-      // Check if idea title starts with "Default #" pattern to identify templates
-      const aIsDefault = a.title?.startsWith("Default #");
-      const bIsDefault = b.title?.startsWith("Default #");
-      
-      // Templates (including "Default #" titled ideas) always go to the bottom
-      if (aIsDefault !== bIsDefault) {
-        return aIsDefault ? 1 : -1;
-      }
-      
-      // If both are defaults, sort by the number in the title
-      if (aIsDefault && bIsDefault) {
-        const aNum = parseInt(a.title?.match(/Default #(\d+)/)?.[1] || "999");
-        const bNum = parseInt(b.title?.match(/Default #(\d+)/)?.[1] || "999");
-        return aNum - bNum;
-      }
-      
-      // For actual templates with sort_order
+      // Templates always go to the bottom, sorted by sort_order (1, 2, 3)
       if (a.is_template !== b.is_template) {
         return a.is_template ? 1 : -1;
       }

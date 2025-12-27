@@ -34,7 +34,6 @@ serve(async (req) => {
     // Get the user's JWT from the Authorization header
     const authHeader = req.headers.get("Authorization");
     console.log("Auth header exists:", !!authHeader);
-    console.log("Auth header preview:", authHeader ? authHeader.substring(0, 30) + "..." : "null");
 
     if (!authHeader) {
       console.error("No authorization header provided");

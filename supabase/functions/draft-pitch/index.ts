@@ -7,16 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface AutofillResult {
-  description: string;
-  core_problem: string;
-  core_value_proposition: string;
-  core_loop: string;
-  mvp_shape: string;
-  target_user: string;
-  difficulty: number;
-  priority: number;
-  sprint_fit: number;
+interface PitchSuggestion {
+  pitch: string;
+  tone: string;
+}
+
+interface DraftPitchResult {
+  suggestions: PitchSuggestion[];
 }
 
 serve(async (req) => {
@@ -48,47 +45,52 @@ serve(async (req) => {
       );
     }
 
-    const { title, category, main_idea } = await req.json();
+    const { title, category, description, core_problem, core_value_proposition } = await req.json();
 
-    console.log("Autofill request received:", { title, category, main_idea });
+    console.log("Draft pitch request received:", { title, category, description });
 
-    if (!title && !main_idea) {
+    if (!title && !description && !core_problem) {
       return new Response(
-        JSON.stringify({ error: "At least title or main_idea is required" }),
+        JSON.stringify({ error: "At least one of title, description, or core_problem is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const systemPrompt = `You are a startup idea analyst. Given a project name, category, and main idea sentence, generate detailed fields for the idea. Be concise but insightful.
+    const systemPrompt = `You are a startup pitch expert. Given context about a project idea, craft 3 compelling 1-liner descriptions (pitch lines).
 
-Return a JSON object with these exact fields:
-- description: A 1-2 sentence expanded description of the idea
-- core_problem: The specific problem this solves (1-2 sentences)
-- core_value_proposition: The unique value this provides to users (1-2 sentences)
-- core_loop: The main user action loop (e.g., "User does X → Gets Y → Returns for Z")
-- mvp_shape: What the minimum viable product looks like (1-2 sentences)
-- target_user: Who the ideal user is (1 sentence)
-- difficulty: 1-5 scale (1=very easy, 5=very hard to build)
-- priority: 1-5 scale (1=low, 5=high priority)
-- sprint_fit: 1-5 scale (how well it fits a sprint - 1=doesn't fit, 5=perfect fit)
+A great pitch line:
+- Is ONE sentence (under 20 words ideally)
+- Clearly states what the product does and who it's for
+- Is catchy and memorable
+- Avoids jargon and buzzwords
+- Creates curiosity or shows clear value
+
+Return a JSON object with this exact structure:
+{
+  "suggestions": [
+    { "pitch": "The 1-liner pitch", "tone": "Professional/Casual/Bold" },
+    { "pitch": "The 1-liner pitch", "tone": "Professional/Casual/Bold" },
+    { "pitch": "The 1-liner pitch", "tone": "Professional/Casual/Bold" }
+  ]
+}
 
 Only return valid JSON, no markdown or explanation.`;
 
-    const userPrompt = `Project: ${title || "Untitled"}
-Category: ${category || "General"}
-Main Idea: ${main_idea || "No description provided"}`;
+    const contextParts = [];
+    if (title) contextParts.push(`Project Name: ${title}`);
+    if (category) contextParts.push(`Category: ${category}`);
+    if (description) contextParts.push(`Current Description: ${description}`);
+    if (core_problem) contextParts.push(`Problem it solves: ${core_problem}`);
+    if (core_value_proposition) contextParts.push(`Value proposition: ${core_value_proposition}`);
 
-    const result = await jsonCompletion<AutofillResult>([
+    const userPrompt = contextParts.join("\n");
+
+    const result = await jsonCompletion<DraftPitchResult>([
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
-    ], { temperature: 0.7 });
+    ], { temperature: 0.8 });
 
-    // Validate and clamp numeric values
-    result.difficulty = Math.min(5, Math.max(1, Math.round(result.difficulty)));
-    result.priority = Math.min(5, Math.max(1, Math.round(result.priority)));
-    result.sprint_fit = Math.min(5, Math.max(1, Math.round(result.sprint_fit)));
-
-    console.log("Autofill complete:", result);
+    console.log("Pitch suggestions complete:", result);
 
     return new Response(
       JSON.stringify(result),
@@ -96,7 +98,7 @@ Main Idea: ${main_idea || "No description provided"}`;
     );
 
   } catch (error) {
-    console.error("Autofill error:", error);
+    console.error("Draft pitch error:", error);
 
     if (isAIError(error)) {
       return new Response(

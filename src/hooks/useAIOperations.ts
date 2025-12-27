@@ -30,6 +30,16 @@ export interface AutofillResult {
   sprint_fit: number;
 }
 
+export interface NameSuggestion {
+  name: string;
+  reason: string;
+}
+
+export interface PitchSuggestion {
+  pitch: string;
+  tone: string;
+}
+
 export interface ScoreResult {
   ai_score: number;
   ai_reasoning: string;
@@ -47,6 +57,21 @@ interface AutofillInput {
   main_idea?: string;
 }
 
+interface SuggestNameInput {
+  main_idea?: string;
+  description?: string;
+  category?: string;
+  core_problem?: string;
+}
+
+interface DraftPitchInput {
+  title?: string;
+  category?: string;
+  description?: string;
+  core_problem?: string;
+  core_value_proposition?: string;
+}
+
 interface ScoreInput {
   title: string;
   description: string;
@@ -60,6 +85,8 @@ interface ScoreInput {
 
 export function useAIOperations() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuggestingName, setIsSuggestingName] = useState(false);
+  const [isDraftingPitch, setIsDraftingPitch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -192,10 +219,143 @@ export function useAIOperations() {
     }
   };
 
+  const suggestName = async (input: SuggestNameInput): Promise<NameSuggestion[] | null> => {
+    if (!input.main_idea && !input.description && !input.core_problem) {
+      toast({
+        variant: "destructive",
+        title: "Need context",
+        description: "Add a description or main idea before suggesting names.",
+      });
+      return null;
+    }
+
+    // Ensure we have a valid session before making AI calls
+    const hasValidSession = await ensureValidSession();
+    if (!hasValidSession) {
+      toast({
+        variant: "destructive",
+        title: "Session expired",
+        description: "Please sign in again to use AI features.",
+      });
+      window.location.href = '/auth';
+      return null;
+    }
+
+    setIsSuggestingName(true);
+    setError(null);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("suggest-name", {
+        body: {
+          main_idea: input.main_idea,
+          description: input.description,
+          category: input.category,
+          core_problem: input.core_problem,
+        },
+      });
+
+      if (fnError) {
+        throw new Error(fnError.message);
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      return data.suggestions as NameSuggestion[];
+    } catch (err) {
+      let message = err instanceof Error ? err.message : "Failed to suggest names";
+
+      // Handle common error cases with friendlier messages
+      if (message.includes("non-2xx") || message.includes("FunctionsHttpError")) {
+        message = "AI service temporarily unavailable. Please try again in a moment.";
+      }
+
+      setError(message);
+      toast({
+        variant: "destructive",
+        title: "AI Error",
+        description: message,
+      });
+      return null;
+    } finally {
+      setIsSuggestingName(false);
+    }
+  };
+
+  const draftPitch = async (input: DraftPitchInput): Promise<PitchSuggestion[] | null> => {
+    if (!input.title && !input.description && !input.core_problem) {
+      toast({
+        variant: "destructive",
+        title: "Need context",
+        description: "Add a title, description, or core problem before drafting pitch.",
+      });
+      return null;
+    }
+
+    // Ensure we have a valid session before making AI calls
+    const hasValidSession = await ensureValidSession();
+    if (!hasValidSession) {
+      toast({
+        variant: "destructive",
+        title: "Session expired",
+        description: "Please sign in again to use AI features.",
+      });
+      window.location.href = '/auth';
+      return null;
+    }
+
+    setIsDraftingPitch(true);
+    setError(null);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("draft-pitch", {
+        body: {
+          title: input.title,
+          category: input.category,
+          description: input.description,
+          core_problem: input.core_problem,
+          core_value_proposition: input.core_value_proposition,
+        },
+      });
+
+      if (fnError) {
+        throw new Error(fnError.message);
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      return data.suggestions as PitchSuggestion[];
+    } catch (err) {
+      let message = err instanceof Error ? err.message : "Failed to draft pitch";
+
+      // Handle common error cases with friendlier messages
+      if (message.includes("non-2xx") || message.includes("FunctionsHttpError")) {
+        message = "AI service temporarily unavailable. Please try again in a moment.";
+      }
+
+      setError(message);
+      toast({
+        variant: "destructive",
+        title: "AI Error",
+        description: message,
+      });
+      return null;
+    } finally {
+      setIsDraftingPitch(false);
+    }
+  };
+
   return {
     autofillIdea,
     scoreIdea,
+    suggestName,
+    draftPitch,
     isLoading,
+    isSuggestingName,
+    isDraftingPitch,
     error,
   };
 }

@@ -266,15 +266,25 @@ export default function Inbox() {
       </header>
 
       <div className="px-4 py-6 space-y-8">
-        <section className="rounded-2xl border border-dashed border-border bg-card/50 p-6 text-center">
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="rounded-2xl border border-dashed border-border bg-card/50 p-6 text-center"
+        >
           <div className="w-16 h-16 rounded-full bg-primary-soft mx-auto mb-4 flex items-center justify-center">
             <Plus className="w-8 h-8 text-primary" />
           </div>
           <p className="text-lg font-semibold text-foreground">Ideas are the future</p>
           <p className="text-sm text-muted-foreground mt-1">Start capturing your thoughts</p>
-        </section>
+        </motion.section>
 
-        <section className="bg-card border border-border rounded-2xl p-5 space-y-4">
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+          className="bg-card border border-border rounded-2xl p-5 space-y-4"
+        >
           <div className="flex items-center gap-3">
             <Sparkles className="w-5 h-5 text-primary" />
             <div>
@@ -322,28 +332,52 @@ export default function Inbox() {
               </div>
             </div>
           </form>
-        </section>
+        </motion.section>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-border p-4 bg-muted/20">
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+          className="grid gap-4 md:grid-cols-3"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
+            className="rounded-2xl border border-border p-4 bg-muted/20"
+          >
             <p className="text-xs uppercase text-muted-foreground">Fresh drops</p>
             <h3 className="text-2xl font-semibold text-foreground">{freshThoughts.length}</h3>
-            <p className="text-sm text-muted-foreground">Touch within 24h to keep energy.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border p-4">
+            <p className="text-sm text-muted-foreground">Touch within 24h to keep energy.</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="rounded-2xl border border-border p-4"
+          >
             <p className="text-xs uppercase text-muted-foreground">Needs structure</p>
             <h3 className="text-2xl font-semibold text-foreground">{needsStructureThoughts.length}</h3>
             <p className="text-sm text-muted-foreground">Give these a quick AI pass so they don't stagnate.</p>
-          </div>
-          <div className="rounded-2xl border border-border p-4">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.35 }}
+            className="rounded-2xl border border-border p-4"
+          >
             <p className="text-xs uppercase text-muted-foreground">Already promoted</p>
             <h3 className="text-2xl font-semibold text-foreground">{promotedThoughts.length}</h3>
             <p className="text-sm text-muted-foreground">Wins you can revisit or reuse.</p>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
-        <section className="space-y-8">
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
+          className="space-y-8"
+        >
           <ThoughtSection
             title="Just dropped"
             description="Stuff you captured recently. Lightly tag or promote while it's fresh."
@@ -352,6 +386,7 @@ export default function Inbox() {
             onCreateWithAI={handleCreateWithAI}
             onMarkPromoted={handleMarkPromoted}
             onArchive={handleArchive}
+            delay={0.45}
           />
 
           <ThoughtSection
@@ -362,6 +397,7 @@ export default function Inbox() {
             onCreateWithAI={handleCreateWithAI}
             onMarkPromoted={handleMarkPromoted}
             onArchive={handleArchive}
+            delay={0.5}
           />
 
           <ThoughtSection
@@ -371,6 +407,7 @@ export default function Inbox() {
             thoughts={promotedThoughts}
             variant="promoted"
             onArchive={handleArchive}
+            delay={0.55}
           />
 
           {!!archivedThoughts.length && (
@@ -382,9 +419,10 @@ export default function Inbox() {
               variant="archived"
               onRestore={handleRestore}
               onDelete={handleDelete}
+              delay={0.6}
             />
           )}
-        </section>
+        </motion.section>
       </div>
     </div>
   );
@@ -396,6 +434,7 @@ interface ThoughtSectionProps {
   emptyLabel: string;
   thoughts: RawThought[];
   variant?: "default" | "promoted" | "archived";
+  delay?: number;
   onCreateWithAI?: (thought: RawThought) => void;
   onMarkPromoted?: (thought: RawThought) => void;
   onArchive?: (thought: RawThought) => void;
@@ -409,6 +448,7 @@ function ThoughtSection({
   emptyLabel,
   thoughts,
   variant = "default",
+  delay = 0,
   onCreateWithAI,
   onMarkPromoted,
   onArchive,
@@ -416,7 +456,12 @@ function ThoughtSection({
   onDelete,
 }: ThoughtSectionProps) {
   return (
-    <section className="bg-card border border-border rounded-2xl p-5">
+    <motion.section
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay, ease: "easeOut" }}
+      className="bg-card border border-border rounded-2xl p-5"
+    >
       <div className="flex flex-col gap-1 mb-4">
         <div className="flex items-center justify-between">
           <div>
@@ -502,6 +547,6 @@ function ThoughtSection({
           ))}
         </AnimatePresence>
       </div>
-    </section>
+    </motion.section>
   );
 }
