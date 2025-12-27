@@ -1,13 +1,16 @@
 project_id = "bcsqrfucckfkouskqauz"
 
 [functions.score-idea]
-verify_jwt = true
+verify_jwt = false
 
 [functions.validate-status-change]
 verify_jwt = true
 
 [functions.autofill-idea]
-verify_jwt = true
+verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = false
 
 [functions.delete-user]
 verify_jwt = false

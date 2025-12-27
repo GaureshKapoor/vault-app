@@ -61,8 +61,8 @@ export default function AI() {
         </div>
       </header>
 
-      {/* Messages */}
-      <div className="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
+      {/* Messages - add padding at bottom for fixed input */}
+      <div className="flex-1 px-4 py-4 pb-24 space-y-4 overflow-y-auto">
         {messages.map((message, index) => (
           <motion.div
             key={message.id}
@@ -125,9 +125,9 @@ export default function AI() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="sticky bottom-16 bg-background border-t border-border px-4 py-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      {/* Input - fixed above footer */}
+      <div className="fixed bottom-16 left-0 right-0 bg-background border-t border-border px-4 py-3 z-40">
+        <form onSubmit={handleSubmit} className="flex gap-2 max-w-lg mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

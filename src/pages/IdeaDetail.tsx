@@ -324,6 +324,7 @@ export default function IdeaDetail() {
       });
 
       if (result) {
+        // Only update score-related fields, not the readiness checks (those are set by autofill)
         const { error } = await supabase
           .from("ideas")
           .update({
@@ -332,9 +333,6 @@ export default function IdeaDetail() {
             difficulty: result.suggested_difficulty,
             priority: result.suggested_priority,
             sprint_fit: result.suggested_sprint_fit,
-            check_clear_problem: result.check_clear_problem,
-            check_simple_loop: result.check_simple_loop,
-            check_deployable_mvp: result.check_deployable_mvp,
           })
           .eq("id", idea.id);
 
@@ -347,9 +345,6 @@ export default function IdeaDetail() {
           difficulty: result.suggested_difficulty,
           priority: result.suggested_priority,
           sprint_fit: result.suggested_sprint_fit,
-          check_clear_problem: result.check_clear_problem,
-          check_simple_loop: result.check_simple_loop,
-          check_deployable_mvp: result.check_deployable_mvp,
         } : prev);
 
         toast({
@@ -823,6 +818,38 @@ export default function IdeaDetail() {
               </Button>
             </div>
           </div>
+
+          {/* AI Score - Prominent display */}
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs text-muted-foreground uppercase tracking-wide">AI Score</span>
+                <div className="text-3xl font-bold text-primary mt-1">
+                  {idea.ai_score !== null ? idea.ai_score.toFixed(1) : "—"}<span className="text-lg text-muted-foreground font-normal">/10</span>
+                </div>
+              </div>
+              {idea.ai_score !== null && (
+                <div className={cn(
+                  "px-3 py-1 rounded-full text-sm font-medium",
+                  idea.ai_score >= 7 ? "bg-status-building/20 text-status-building" :
+                  idea.ai_score >= 5 ? "bg-status-shortlisted/20 text-status-shortlisted" :
+                  "bg-status-paused/20 text-status-paused"
+                )}>
+                  {idea.ai_score >= 7 ? "Strong" : idea.ai_score >= 5 ? "Moderate" : "Needs Work"}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AI Reasoning */}
+          {idea.ai_reasoning && (
+            <div className="bg-card rounded-xl border border-border p-4">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">AI Reasoning</span>
+              <p className="text-sm text-foreground mt-2 leading-relaxed">{idea.ai_reasoning}</p>
+            </div>
+          )}
+
+          {/* Status, Sprint Fit, Difficulty, Priority grid */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card rounded-xl border border-border p-3">
               <span className="text-xs text-muted-foreground">Status</span>
@@ -831,9 +858,9 @@ export default function IdeaDetail() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <span>
-                        <StatusBadge 
-                          status={formatStatus(idea.status)} 
-                          interactive 
+                        <StatusBadge
+                          status={formatStatus(idea.status)}
+                          interactive
                         />
                       </span>
                     </DropdownMenuTrigger>
@@ -857,9 +884,24 @@ export default function IdeaDetail() {
               </div>
             </div>
             <div className="bg-card rounded-xl border border-border p-3">
-              <span className="text-xs text-muted-foreground">AI Score</span>
-              <div className="mt-1 text-lg font-bold text-primary">
-                {idea.ai_score !== null ? idea.ai_score.toFixed(1) : "—"}
+              <span className="text-xs text-muted-foreground">Sprint Fit</span>
+              <div className="mt-1">
+                {isEditing ? (
+                  <select
+                    defaultValue={idea.sprint_fit || ""}
+                    onChange={(e) => handleFieldUpdate("sprint_fit", parseInt(e.target.value) || null)}
+                    className="w-full text-sm font-medium bg-transparent border border-border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Not set</option>
+                    {[1, 2, 3, 4, 5].map((val) => (
+                      <option key={val} value={val}>{val}/5</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="font-medium text-foreground">
+                    {idea.sprint_fit ? `${idea.sprint_fit}/5` : "—"}
+                  </span>
+                )}
               </div>
             </div>
             <div className="bg-card rounded-xl border border-border p-3">

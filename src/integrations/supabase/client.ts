@@ -15,3 +15,51 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Handle auth errors globally - auto sign out on invalid refresh token
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'TOKEN_REFRESHED' && !session) {
+    // Token refresh failed, clear invalid session
+    supabase.auth.signOut();
+  }
+});
+
+// Listen for auth errors and handle invalid refresh tokens
+let isHandlingAuthError = false;
+
+// Intercept fetch errors for auth-related 401s with invalid refresh tokens
+const originalFetch = window.fetch;
+window.fetch = async (...args) => {
+  const response = await originalFetch(...args);
+
+  // Only check Supabase auth token refresh endpoint for invalid refresh token errors
+  const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
+  const isAuthTokenEndpoint = url.includes('supabase.co/auth/v1/token');
+
+  if (
+    response.status === 400 &&
+    isAuthTokenEndpoint &&
+    !isHandlingAuthError
+  ) {
+    const clonedResponse = response.clone();
+    try {
+      const body = await clonedResponse.json();
+      // Only sign out for specifically invalid refresh token errors
+      if (
+        body?.error_description?.includes('Refresh Token Not Found') ||
+        body?.error_description?.includes('Invalid Refresh Token') ||
+        body?.msg?.includes('Refresh Token Not Found')
+      ) {
+        isHandlingAuthError = true;
+        console.warn('Invalid refresh token detected, signing out...');
+        await supabase.auth.signOut();
+        window.location.href = '/auth';
+        isHandlingAuthError = false;
+      }
+    } catch {
+      // Not JSON or other error, ignore
+    }
+  }
+
+  return response;
+};

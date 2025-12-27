@@ -2,6 +2,22 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// Helper to ensure we have a valid session before making AI calls
+async function ensureValidSession(): Promise<boolean> {
+  // Use getUser() which actually validates the token with the server
+  // Unlike getSession() which just returns cached data from localStorage
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    // Invalid session - clear it and return false
+    console.warn('Invalid session detected:', error?.message);
+    await supabase.auth.signOut();
+    return false;
+  }
+
+  return true;
+}
+
 export interface AutofillResult {
   description: string;
   core_problem: string;
@@ -54,6 +70,18 @@ export function useAIOperations() {
         title: "Need input",
         description: "Add a title or main idea before using AI autofill.",
       });
+      return null;
+    }
+
+    // Ensure we have a valid session before making AI calls
+    const hasValidSession = await ensureValidSession();
+    if (!hasValidSession) {
+      toast({
+        variant: "destructive",
+        title: "Session expired",
+        description: "Please sign in again to use AI features.",
+      });
+      window.location.href = '/auth';
       return null;
     }
 
@@ -112,6 +140,18 @@ export function useAIOperations() {
         title: "Missing fields",
         description: `Required for scoring: ${missingFields.join(", ")}.`,
       });
+      return null;
+    }
+
+    // Ensure we have a valid session before making AI calls
+    const hasValidSession = await ensureValidSession();
+    if (!hasValidSession) {
+      toast({
+        variant: "destructive",
+        title: "Session expired",
+        description: "Please sign in again to use AI features.",
+      });
+      window.location.href = '/auth';
       return null;
     }
 

@@ -69,7 +69,9 @@ export default function NewIdea() {
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth", { replace: true });
       }

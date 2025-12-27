@@ -80,33 +80,6 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<SortOption>("updated_at");
 
-  // Check auth and fetch ideas
-  useEffect(() => {
-    const checkAuthAndFetch = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/auth", { replace: true });
-        return;
-      }
-
-      fetchIdeas();
-    };
-
-    checkAuthAndFetch();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!session) {
-          navigate("/auth", { replace: true });
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
   const fetchIdeas = useCallback(async (showLoading = true) => {
     if (showLoading) setIsLoading(true);
     try {
@@ -134,6 +107,33 @@ export default function Home() {
   const handleRefresh = useCallback(async () => {
     await fetchIdeas(false);
   }, [fetchIdeas]);
+
+  // Check auth and fetch ideas
+  useEffect(() => {
+    const checkAuthAndFetch = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+
+      fetchIdeas();
+    };
+
+    checkAuthAndFetch();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) {
+          navigate("/auth", { replace: true });
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [fetchIdeas, navigate]);
 
   // Sort function
   const sortIdeas = (ideasToSort: Idea[]): Idea[] => {
