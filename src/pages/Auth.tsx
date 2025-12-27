@@ -409,7 +409,7 @@ export default function Auth() {
           className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-all duration-300 group z-20"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300" />
-          <span className="text-sm font-medium opacity-70 group-hover:opacity-100 transition-opacity duration-300">Back to home</span>
+          <span className="text-sm font-medium opacity-70 group-hover:opacity-100 transition-opacity duration-300">Back</span>
         </button>
 
         {/* Theme Toggle for mobile */}

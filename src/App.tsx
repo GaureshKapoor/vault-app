@@ -25,6 +25,8 @@ import Inbox from "./pages/Inbox";
 import AI from "./pages/AI";
 import Progress from "./pages/Progress";
 import Progress2 from "./pages/Progress2";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
 import Profile from "./pages/Profile";
 import Feed from "./pages/Feed";
 import StartBuilding from "./pages/StartBuilding";
@@ -64,6 +66,8 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/onboarding/setup" element={<OnboardingSetup />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsConditions />} />
           
           {/* Protected App Routes with Bottom Nav */}
           <Route element={<AppLayout />}>

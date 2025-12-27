@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Briefcase, Target, Clock, Settings, LogOut, Trash2, Sun, Moon, Pencil, X, Check, IdCard, CreditCard, Sparkles } from "lucide-react";
+import { User, Mail, Briefcase, Target, Clock, Settings, LogOut, Trash2, Sun, Moon, Pencil, X, Check, IdCard, CreditCard, Sparkles, BookOpen, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -784,11 +784,57 @@ export default function Profile() {
           </div>
         </motion.section>
 
-        {/* Actions */}
+        {/* Docs */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
+          className="space-y-3"
+        >
+          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Docs</h3>
+          <div className="space-y-2">
+            <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <FileText className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <span className="font-medium text-foreground">Privacy Policy</span>
+                <p className="text-xs text-muted-foreground">Understand how we store and process your data.</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary"
+                onClick={() => navigate("/privacy", { state: { from: "profile" } })}
+              >
+                View
+              </Button>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BookOpen className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <span className="font-medium text-foreground">Terms & Conditions</span>
+                <p className="text-xs text-muted-foreground">Review the agreement that covers Vault usage.</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary"
+                onClick={() => navigate("/terms", { state: { from: "profile" } })}
+              >
+                View
+              </Button>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Actions */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="space-y-3"
         >
           <Button

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { 
   ChevronLeft, 
@@ -614,6 +614,7 @@ function Header({ scrolled }: { scrolled: boolean }) {
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -653,6 +654,15 @@ export default function Onboarding() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (location.state?.scrollTo === "footer") {
+      setTimeout(() => {
+        document.querySelector("footer")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const handlePrev = () => paginate(-1);
   const handleNext = () => paginate(1);
@@ -1370,12 +1380,12 @@ export default function Onboarding() {
               >
                 FAQ
               </button>
-              <a href="#" className="hover:text-foreground transition-colors">
+              <Link to="/privacy" state={{ from: "landing" }} className="hover:text-foreground transition-colors">
                 Privacy
-              </a>
-              <a href="#" className="hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/terms" state={{ from: "landing" }} className="hover:text-foreground transition-colors">
                 Terms
-              </a>
+              </Link>
             </div>
           </div>
 
