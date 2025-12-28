@@ -69,6 +69,7 @@ Current behavior: Pricing page exists, Stripe checkout stubbed. All users receiv
 - **AI Chat Assistant**: Conversational AI with context from user's ideas (top 20 non-archived)
 - **AI Name Suggestion**: Suggests 3 project names with reasoning (wand icon next to title)
 - **AI Pitch Drafting**: Generates 3 compelling 1-liner descriptions with different tones
+- **AI Idea Generator**: Generates complete ideas from a gist/description or random with category/difficulty filters
 - **AI Provider**: OpenRouter (model-agnostic, currently using LLaMA 3.3 70B, configurable via env)
 
 **Authentication Pattern**: Edge Functions use manual JWT validation (not `verify_jwt = true` in config which has middleware issues). Each function validates the `Authorization` header by calling `supabase.auth.getUser()`. If users get 401 errors, they should sign out and back in to refresh their JWT token.
@@ -89,7 +90,7 @@ idea → shortlisted → building → shipped
        archived      archived
 ```
 
-**Constraint**: Only ONE idea can be "building" at a time per user (enforced at database level)
+**Constraint**: Only ONE idea can be "building" at a time per user (enforced at database level and UI with clear error messaging)
 
 #### Idea Evaluation
 - Difficulty (1-5 scale)
@@ -117,6 +118,9 @@ idea → shortlisted → building → shipped
 - Dark/light mode toggle
 - Respects system preference by default
 - Persists choice in localStorage
+- Light theme: minimal, clean aesthetic inspired by Notion/Linear
+- Vibrant purple primary color (clean but punchy)
+- No gradients on buttons/icons (solid colors only)
 
 #### Onboarding Flow
 - 7-step setup after first login
@@ -165,12 +169,15 @@ idea → shortlisted → building → shipped
 | RLS | Row-level security for data isolation |
 | OpenRouter | AI provider (model-agnostic LLM access) |
 
-### Edge Functions (7 deployed)
+### Edge Functions (10 deployed)
 | Function | Purpose |
 |----------|---------|
 | `autofill-idea` | AI generates idea fields from title/category |
 | `score-idea` | AI scores idea 0-10 with reasoning |
 | `ai-chat` | Conversational AI assistant |
+| `suggest-name` | AI suggests project names |
+| `draft-pitch` | AI drafts 1-liner descriptions |
+| `generate-idea` | AI generates complete ideas from gist/filters |
 | `create-checkout-session` | Stripe checkout (stubbed) |
 | `delete-user` | Complete account deletion |
 | `validate-status-change` | Lifecycle transition validation |
@@ -224,10 +231,8 @@ idea_notes
 ## Future Vision (No Timelines)
 
 ### Near-term Goals
-- Wire AI autofill to own AI provider
-- Wire AI scoring to trigger on idea creation/update
-- Enable profile editing
 - Persist inbox thoughts to database
+- Wire status validation to backend
 
 ### Medium-term Goals
 - Export ideas to various formats
@@ -257,3 +262,5 @@ idea_notes
 - ~~No password reset flow~~ → Password reset working
 - ~~Profile is read-only~~ → Profile editing with avatar picker working
 - ~~No mobile app~~ → iOS app via Capacitor in development
+- ~~AI autofill not wired~~ → AI autofill, scoring, chat, name suggestion, pitch drafting, idea generation all working
+- ~~One-building rule fails silently~~ → Clear error toast explaining which idea is currently being built

@@ -88,13 +88,14 @@ Apply migrations in order from `supabase/migrations/`:
 3. Template ideas
 4. Sort order
 
-### Edge Functions (9 deployed)
+### Edge Functions (10 deployed)
 Located in `supabase/functions/`:
 - `autofill-idea` - AI generates idea fields from title/category
 - `score-idea` - AI scores idea 0-10 with reasoning
 - `ai-chat` - Conversational AI assistant
 - `suggest-name` - AI suggests project names
 - `draft-pitch` - AI drafts 1-liner descriptions
+- `generate-idea` - AI generates complete ideas from gist/filters
 - `create-checkout-session` - Stripe checkout (stubbed)
 - `delete-user` - Complete account deletion
 - `validate-status-change` - Lifecycle transition rules
@@ -165,9 +166,14 @@ idea → shortlisted → building → shipped
 - AI Autofill (generates idea fields from title/category)
 - AI Scoring (0-10 score with reasoning)
 - AI Chat Assistant (context-aware with user's ideas)
+- AI Idea Generator (generate ideas from gist or random with filters)
+- AI Name Suggestion (suggests 3 project names with reasoning)
+- AI Pitch Drafting (generates compelling 1-liner descriptions)
 - Profile editing with avatar picker
 - Idea CRUD with 6-state lifecycle
-- Dark/light theme
+- One-building-at-a-time enforcement with clear error messaging
+- Dark/light theme (minimal, clean aesthetic inspired by Notion/Linear)
+- Responsive mobile layout with proper header spacing
 
 ### Stubbed
 - Payments (Stripe exists, checkout skipped - all users free tier)
@@ -180,6 +186,7 @@ idea → shortlisted → building → shipped
 - **No email verification** - Auto-confirm enabled
 - **Notes are append-only** - Can't edit or delete
 - **Payments stubbed** - All users get free tier
+- **iOS app in development** - Capacitor wrapper being implemented
 
 ## Project Structure
 
