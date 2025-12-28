@@ -83,10 +83,13 @@ interface ThinkingCardProps {
 
 function ThinkingCard({ icon: Icon, title, content, isEditing, field, onUpdate }: ThinkingCardProps) {
   const [localValue, setLocalValue] = useState(content);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     setLocalValue(content);
   }, [content]);
+
+  const shouldTruncate = content && content.length > 150;
 
   return (
     <motion.div
@@ -110,7 +113,22 @@ function ThinkingCard({ icon: Icon, title, content, isEditing, field, onUpdate }
           className="w-full bg-transparent text-sm text-foreground resize-none focus:outline-none min-h-[60px] leading-relaxed"
         />
       ) : (
-        <p className="text-sm text-muted-foreground leading-relaxed">{content || "Not defined"}</p>
+        <div>
+          <p className={cn(
+            "text-sm text-muted-foreground leading-relaxed",
+            !isExpanded && shouldTruncate && "line-clamp-3"
+          )}>
+            {content || "Not defined"}
+          </p>
+          {shouldTruncate && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs text-primary mt-1 hover:underline"
+            >
+              {isExpanded ? "Show less" : "Show more"}
+            </button>
+          )}
+        </div>
       )}
     </motion.div>
   );
@@ -139,6 +157,7 @@ export default function IdeaDetail() {
   const [isSaving, setIsSaving] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<Partial<Idea>>({});
   const [isExporting, setIsExporting] = useState(false);
+  const [isPitchExpanded, setIsPitchExpanded] = useState(false);
 
   // AI state
   const [autofillSuggestions, setAutofillSuggestions] = useState<AutofillResult | null>(null);
@@ -612,8 +631,30 @@ export default function IdeaDetail() {
 
   const handleStatusChange = async (newStatus: IdeaStatus) => {
     if (!idea) return;
-    
+
     try {
+      // Check if trying to set to "building" and there's already one building
+      if (newStatus === "building" && idea.status !== "building") {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: buildingIdeas } = await supabase
+            .from("ideas")
+            .select("id, title")
+            .eq("user_id", user.id)
+            .eq("status", "building")
+            .neq("id", idea.id);
+
+          if (buildingIdeas && buildingIdeas.length > 0) {
+            toast({
+              variant: "destructive",
+              title: "One idea at a time",
+              description: `You can only have one idea in "Building" status. "${buildingIdeas[0].title}" is currently being built. Finish or pause it first.`,
+            });
+            return;
+          }
+        }
+      }
+
       const { error } = await supabase
         .from("ideas")
         .update({ status: newStatus })
@@ -969,9 +1010,30 @@ export default function IdeaDetail() {
                     placeholder="Main idea sentence..."
                   />
                 ) : (
-                  <p className="text-foreground leading-relaxed">
-                    {idea.main_idea || idea.description || "No description provided"}
-                  </p>
+                  <div>
+                    {(() => {
+                      const text = idea.main_idea || idea.description || "No description provided";
+                      const shouldTruncatePitch = text.length > 200;
+                      return (
+                        <>
+                          <p className={cn(
+                            "text-foreground leading-relaxed",
+                            !isPitchExpanded && shouldTruncatePitch && "line-clamp-4"
+                          )}>
+                            {text}
+                          </p>
+                          {shouldTruncatePitch && (
+                            <button
+                              onClick={() => setIsPitchExpanded(!isPitchExpanded)}
+                              className="text-xs text-primary mt-2 hover:underline"
+                            >
+                              {isPitchExpanded ? "Show less" : "Show more"}
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 )}
               </div>
               <Tooltip>
@@ -1006,15 +1068,17 @@ export default function IdeaDetail() {
           transition={{ delay: 0.1 }}
           className="space-y-4"
         >
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Status & Details</h3>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Status & Details</h3>
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleScore}
                 disabled={isScoring || isAILoading}
-                className="gap-1.5"
+                className="gap-1.5 flex-1"
               >
                 {isScoring ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1028,14 +1092,14 @@ export default function IdeaDetail() {
                 size="sm"
                 onClick={handleAutofill}
                 disabled={isAILoading}
-                className="gap-1.5"
+                className="gap-1.5 flex-1"
               >
                 {isAILoading && !isScoring ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Sparkles className="w-3.5 h-3.5" />
                 )}
-                {isAILoading && !isScoring ? "Generating..." : (idea.core_problem && idea.core_value_proposition) ? "Re-autofill" : "Autofill"}
+                {isAILoading && !isScoring ? "..." : "Autofill"}
               </Button>
             </div>
           </div>

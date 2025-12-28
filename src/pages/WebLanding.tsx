@@ -292,7 +292,7 @@ function AnimatedTagline() {
     <div className="h-14 md:h-18 lg:h-20 flex items-center justify-center mt-2 overflow-visible">
       <span
         key={taglineWords[currentWordIndex]}
-        className="text-4xl md:text-5xl lg:text-6xl font-bold text-gradient italic animate-fade-in pr-2"
+        className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary italic animate-fade-in pr-2"
       >
         {taglineWords[currentWordIndex]}
       </span>
@@ -781,7 +781,7 @@ export default function Onboarding() {
             </Badge>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-1 tracking-tight">
-              All Your <span className="text-gradient">Ideas</span>, One Place
+              All Your <span className="text-primary">Ideas</span>, One Place
             </h1>
             <AnimatedTagline />
             
@@ -793,9 +793,9 @@ export default function Onboarding() {
               Capture ideas as they come, use AI to create, refine and evaluate them, and move from half-baked thoughts to execution-ready plans at rapid pace.
             </p>
             
-            <p className="text-primary/80 dark:text-primary-foreground/70 text-base md:text-lg mt-6 max-w-md mx-auto italic">
-              Vibe-<span className="text-gradient font-semibold text-glow animate-glow-pulse not-italic">ideate</span>
-              <Sparkles className="inline w-4 h-4 text-primary ml-1 animate-pulse-soft" />
+            <p className="text-muted-foreground text-base md:text-lg mt-6 max-w-md mx-auto italic">
+              Vibe-<span className="text-primary font-semibold not-italic">ideate</span>
+              <Sparkles className="inline w-4 h-4 text-primary ml-1" />
               {" "}in the world of vibe-coding
             </p>
           </motion.div>
@@ -911,7 +911,7 @@ export default function Onboarding() {
                   key={i}
                   className="text-center p-3 md:p-5 rounded-xl bg-card border border-border"
                 >
-                  <div className="text-2xl md:text-4xl font-bold text-gradient mb-0.5">
+                  <div className="text-2xl md:text-4xl font-bold text-primary mb-0.5">
                     {stat.value}
                   </div>
                   <div className="text-sm md:text-base font-semibold text-foreground">
@@ -1134,7 +1134,7 @@ export default function Onboarding() {
           <AnimatedSection>
             <div className="text-center mb-8 md:mb-12">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3">
-                Why builders <span className="text-gradient">(and everyone)</span> love Vault
+                Why builders <span className="text-primary">(and everyone)</span> love Vault
               </h2>
               <p className="text-muted-foreground text-base max-w-xl mx-auto">
                 Join thousands who've transformed how they capture and build ideas

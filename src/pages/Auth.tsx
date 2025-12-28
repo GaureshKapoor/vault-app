@@ -642,18 +642,18 @@ export default function Auth() {
           <VaultLogo size="lg" className="mx-auto mb-8" />
           
           <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight">
-            All Your <span className="text-gradient">Ideas</span>, One Place
+            All Your <span className="text-primary-foreground">Ideas</span>, One Place
           </h2>
-          
+
           <AnimatedFast />
-          
+
           <p className="text-white/80 text-lg mt-6 tracking-wide font-semibold">
             Less chaos. More building.
           </p>
-          
+
           <p className="text-white/60 text-base mt-4 max-w-sm mx-auto italic">
-            Vibe-<span className="text-gradient font-semibold text-glow animate-glow-pulse not-italic">ideate</span>
-            <Sparkles className="inline w-4 h-4 text-primary ml-1 animate-pulse-soft" />
+            Vibe-<span className="text-primary-foreground font-semibold not-italic">ideate</span>
+            <Sparkles className="inline w-4 h-4 text-primary-foreground ml-1" />
             {" "}in the world of vibe-coding
           </p>
         </div>
@@ -679,7 +679,7 @@ function AnimatedFast() {
     <div className="h-14 lg:h-16 flex items-center justify-center mt-2">
       <span
         key={taglineWords[currentWordIndex]}
-        className="text-4xl lg:text-5xl font-bold text-gradient italic animate-fade-in"
+        className="text-4xl lg:text-5xl font-bold text-primary-foreground italic animate-fade-in"
       >
         {taglineWords[currentWordIndex]}
       </span>

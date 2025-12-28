@@ -19,7 +19,7 @@ export function Confirmation({ onComplete, isLoading }: ConfirmationProps) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-        className="w-20 h-20 rounded-full gradient-hero flex items-center justify-center mx-auto"
+        className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto"
       >
         <CheckCircle2 className="w-10 h-10 text-primary-foreground" />
       </motion.div>

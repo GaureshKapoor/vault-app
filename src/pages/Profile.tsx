@@ -489,7 +489,7 @@ export default function Profile() {
         >
           <button
             onClick={() => setShowAvatarPicker(true)}
-            className="w-20 h-20 rounded-full gradient-hero flex items-center justify-center text-4xl transition-all cursor-pointer hover:scale-105 hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background"
+            className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-4xl transition-all cursor-pointer hover:scale-105 hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background"
           >
             {getAvatarEmoji(isEditing ? editedData.avatar_url : profile.avatar_url)}
           </button>

@@ -113,7 +113,7 @@ function AnimatedTagline() {
     <div className="h-12 flex items-center justify-center mt-2">
       <span
         key={taglineWords[currentWordIndex]}
-        className="text-3xl font-bold text-gradient italic animate-fade-in"
+        className="text-3xl font-bold text-primary italic animate-fade-in"
       >
         {taglineWords[currentWordIndex]}
       </span>
@@ -180,7 +180,7 @@ export default function AppStart() {
           </Badge>
 
           <h1 className="text-3xl font-bold text-foreground mb-1 tracking-tight">
-            All Your <span className="text-gradient">Ideas</span>, One Place
+            All Your <span className="text-primary">Ideas</span>, One Place
           </h1>
           <AnimatedTagline />
 

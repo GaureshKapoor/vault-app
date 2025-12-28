@@ -40,9 +40,11 @@ export default function AI() {
   // Chat state (lifted up for header access)
   const { messages, clearHistory } = useAIChat();
 
-  // Persist mode changes
+  // Persist mode changes and reset scroll on mode change
   useEffect(() => {
     localStorage.setItem(MODE_STORAGE_KEY, mode);
+    // Reset scroll position when switching modes
+    window.scrollTo(0, 0);
   }, [mode]);
 
   return (
@@ -51,7 +53,7 @@ export default function AI() {
       <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
               {mode === "chat" ? (
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               ) : (
@@ -84,8 +86,8 @@ export default function AI() {
         </div>
       </header>
 
-      {/* Content - with top padding for fixed header */}
-      <div className="pt-[76px] flex-1 flex flex-col min-h-0">
+      {/* Content - with top padding for fixed header (more on mobile) */}
+      <div className="pt-[108px] md:pt-[76px] flex-1 flex flex-col min-h-0">
         <AnimatePresence mode="wait">
           {mode === "chat" ? (
             <motion.div
@@ -256,10 +258,19 @@ function GenerateView() {
     updateIdea,
   } = useIdeaGeneration();
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const [category, setCategory] = useState<string>("");
   const [difficulty, setDifficulty] = useState<string>("");
   const [gist, setGist] = useState("");
   const [editingIdea, setEditingIdea] = useState<GeneratedIdea | null>(null);
+
+  // Reset scroll position when component mounts
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, []);
 
   const handleGenerate = async () => {
     const options: { category?: string; difficulty?: number; gist?: string } = {};
@@ -292,7 +303,7 @@ function GenerateView() {
 
   return (
     <>
-      <div className="flex-1 px-4 py-4 pb-24 overflow-y-auto space-y-6">
+      <div ref={scrollContainerRef} className="flex-1 px-4 py-4 pb-20 overflow-y-auto space-y-6">
         {/* Generation Controls */}
         <div className="bg-card border border-border rounded-xl p-4 space-y-4">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground">

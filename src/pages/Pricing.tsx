@@ -286,7 +286,7 @@ export default function Pricing() {
               }`}
             >
               {/* Trial Badge */}
-              <div className="absolute -top-2.5 left-3 px-2 py-0.5 rounded-full gradient-hero text-primary-foreground text-[10px] font-semibold flex items-center gap-1">
+              <div className="absolute -top-2.5 left-3 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center gap-1">
                 <Sparkles className="w-2.5 h-2.5" />
                 7-day trial
               </div>

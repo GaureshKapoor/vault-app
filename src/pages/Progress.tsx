@@ -146,6 +146,22 @@ export default function Progress() {
   // Update idea status
   const handleStatusChange = async (ideaId: string, newStatus: IdeaStatus) => {
     try {
+      // Check if trying to set to "building" and there's already one building
+      if (newStatus === "building") {
+        const currentIdea = ideas.find(i => i.id === ideaId);
+        if (currentIdea?.status !== "building") {
+          const buildingIdea = ideas.find(i => i.status === "building" && i.id !== ideaId);
+          if (buildingIdea) {
+            toast({
+              variant: "destructive",
+              title: "One idea at a time",
+              description: `You can only have one idea in "Building" status. "${buildingIdea.title}" is currently being built. Finish or pause it first.`,
+            });
+            return;
+          }
+        }
+      }
+
       const { error } = await supabase
         .from("ideas")
         .update({ status: newStatus })
@@ -280,8 +296,8 @@ export default function Progress() {
         </div>
       </header>
 
-      {/* Content - with top padding for fixed header */}
-      <div className="pt-[92px] px-4 py-6 space-y-8">
+      {/* Content - with top padding for fixed header (more on mobile) */}
+      <div className="pt-[108px] md:pt-[92px] px-4 py-6 space-y-8">
         {/* Hero summary */}
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="bg-card border border-border rounded-2xl p-5 flex flex-col gap-4">

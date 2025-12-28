@@ -8,61 +8,61 @@
 
 @layer base {
   :root {
-    /* Vault Brand Colors */
-    --background: 230 60% 99%;
-    --foreground: 222 47% 11%;
+    /* Minimal Light Theme - Inspired by Notion, Linear, Bear */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 18%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 99%;
+    --card-foreground: 220 13% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 220 13% 18%;
 
-    /* Brand Purple */
-    --primary: 263 70% 58%;
+    /* Vibrant purple - clean but punchy */
+    --primary: 252 56% 57%;
     --primary-foreground: 0 0% 100%;
-    --primary-strong: 263 82% 50%;
-    --primary-soft: 270 100% 97%;
+    --primary-strong: 252 62% 50%;
+    --primary-soft: 252 30% 96%;
 
-    --secondary: 215 20% 65%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 10% 92%;
+    --secondary-foreground: 220 13% 18%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 10% 96%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 270 100% 97%;
-    --accent-foreground: 263 70% 58%;
+    --accent: 220 10% 96%;
+    --accent-foreground: 220 13% 18%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 263 70% 58%;
+    --border: 220 10% 90%;
+    --input: 220 10% 90%;
+    --ring: 252 56% 57%;
 
     --radius: 0.75rem;
 
     /* Status Colors */
-    --status-idea: 263 70% 58%;
-    --status-exploring: 199 89% 48%;
-    --status-shortlisted: 45 93% 47%;
-    --status-building: 142 71% 45%;
-    --status-paused: 215 16% 47%;
-    --status-shipped: 263 82% 50%;
+    --status-idea: 252 56% 57%;
+    --status-exploring: 199 70% 48%;
+    --status-shortlisted: 45 80% 47%;
+    --status-building: 142 55% 42%;
+    --status-paused: 220 10% 50%;
+    --status-shipped: 252 62% 50%;
 
     /* Sidebar */
-    --sidebar-background: 230 60% 99%;
-    --sidebar-foreground: 215 16% 47%;
-    --sidebar-primary: 263 70% 58%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 10% 46%;
+    --sidebar-primary: 252 56% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 100% 97%;
-    --sidebar-accent-foreground: 263 70% 58%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 263 70% 58%;
+    --sidebar-accent: 220 10% 96%;
+    --sidebar-accent-foreground: 220 13% 18%;
+    --sidebar-border: 220 10% 90%;
+    --sidebar-ring: 252 56% 57%;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(263 82% 50%) 0%, hsl(280 80% 60%) 100%);
-    --gradient-card-hover: linear-gradient(180deg, hsl(270 100% 97%) 0%, hsl(0 0% 100%) 100%);
+    /* Gradients - now solid colors for minimal look */
+    --gradient-hero: hsl(252 56% 57%);
+    --gradient-card-hover: hsl(220 10% 98%);
     --gradient-dark-hero: linear-gradient(180deg, hsl(240 10% 4%) 0%, hsl(240 10% 8%) 100%);
   }
 
@@ -156,16 +156,18 @@
     background: var(--gradient-dark-hero);
   }
 
+  /* Text gradient - now just solid primary color for minimal look */
   .text-gradient {
-    background: var(--gradient-hero);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: hsl(var(--primary));
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: currentColor;
+    background-clip: unset;
   }
 
+  /* Text glow - removed for minimal look */
   .text-glow {
-    text-shadow: 0 0 20px hsl(var(--primary) / 0.5),
-                 0 0 40px hsl(var(--primary) / 0.3);
+    text-shadow: none;
   }
 
   /* iOS Safe Area utilities */

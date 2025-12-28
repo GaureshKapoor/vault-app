@@ -266,8 +266,8 @@ export default function Inbox() {
         </div>
       </header>
 
-      {/* Content - with top padding for fixed header */}
-      <div className="pt-[92px] px-4 py-6 space-y-8">
+      {/* Content - with top padding for fixed header (more on mobile) */}
+      <div className="pt-[108px] md:pt-[92px] px-4 py-6 space-y-8">
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

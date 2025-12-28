@@ -186,6 +186,22 @@ export default function Home() {
   // Update idea status
   const handleStatusChange = async (ideaId: string, newStatus: IdeaStatus) => {
     try {
+      // Check if trying to set to "building" and there's already one building
+      if (newStatus === "building") {
+        const currentIdea = ideas.find(i => i.id === ideaId);
+        if (currentIdea?.status !== "building") {
+          const buildingIdea = ideas.find(i => i.status === "building" && i.id !== ideaId);
+          if (buildingIdea) {
+            toast({
+              variant: "destructive",
+              title: "One idea at a time",
+              description: `You can only have one idea in "Building" status. "${buildingIdea.title}" is currently being built. Finish or pause it first.`,
+            });
+            return;
+          }
+        }
+      }
+
       const { error } = await supabase
         .from("ideas")
         .update({ status: newStatus })
@@ -193,7 +209,7 @@ export default function Home() {
 
       if (error) throw error;
 
-      setIdeas(prev => prev.map(idea => 
+      setIdeas(prev => prev.map(idea =>
         idea.id === ideaId ? { ...idea, status: newStatus } : idea
       ));
 

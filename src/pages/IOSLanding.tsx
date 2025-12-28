@@ -114,7 +114,7 @@ export default function IOSLanding() {
 
         {/* Title */}
         <h1 className="text-4xl font-bold text-foreground text-center mb-6 tracking-tight">
-          All Your <span className="text-gradient">Ideas</span>, One Place
+          All Your <span className="text-primary">Ideas</span>, One Place
         </h1>
 
         {/* Subtitle */}

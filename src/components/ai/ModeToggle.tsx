@@ -15,11 +15,14 @@ export function ModeToggle({ mode, onChange }: ModeToggleProps) {
       <button
         onClick={() => onChange("chat")}
         className={cn(
-          "relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+          "relative flex items-center justify-center gap-1.5 rounded-md transition-colors",
+          // Mobile: icon only, square button
+          "w-8 h-8 md:w-auto md:h-auto md:px-3 md:py-1.5",
           mode === "chat"
             ? "text-foreground"
             : "text-muted-foreground hover:text-foreground"
         )}
+        aria-label="Chat mode"
       >
         {mode === "chat" && (
           <motion.div
@@ -29,16 +32,19 @@ export function ModeToggle({ mode, onChange }: ModeToggleProps) {
           />
         )}
         <MessageSquare className="w-4 h-4 relative z-10" />
-        <span className="relative z-10">Chat</span>
+        <span className="relative z-10 hidden md:inline text-sm font-medium">Chat</span>
       </button>
       <button
         onClick={() => onChange("generate")}
         className={cn(
-          "relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+          "relative flex items-center justify-center gap-1.5 rounded-md transition-colors",
+          // Mobile: icon only, square button
+          "w-8 h-8 md:w-auto md:h-auto md:px-3 md:py-1.5",
           mode === "generate"
             ? "text-foreground"
             : "text-muted-foreground hover:text-foreground"
         )}
+        aria-label="Generate mode"
       >
         {mode === "generate" && (
           <motion.div
@@ -48,7 +54,7 @@ export function ModeToggle({ mode, onChange }: ModeToggleProps) {
           />
         )}
         <Lightbulb className="w-4 h-4 relative z-10" />
-        <span className="relative z-10">Generate</span>
+        <span className="relative z-10 hidden md:inline text-sm font-medium">Generate</span>
       </button>
     </div>
   );

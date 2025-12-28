@@ -29,7 +29,7 @@ export default function StartBuilding() {
           transition={{ duration: 0.5 }}
         >
           <div className="relative mb-8">
-            <div className="w-24 h-24 rounded-full gradient-hero mx-auto flex items-center justify-center animate-pulse-soft">
+            <div className="w-24 h-24 rounded-full bg-primary mx-auto flex items-center justify-center">
               <Rocket className="w-12 h-12 text-primary-foreground" />
             </div>
             <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-status-shortlisted flex items-center justify-center">
