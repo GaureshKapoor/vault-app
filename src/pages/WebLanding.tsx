@@ -564,14 +564,14 @@ function Header({ scrolled }: { scrolled: boolean }) {
           <div className="flex md:hidden items-center mr-1">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Menu className="h-5 w-5" />
-                </Button>
+                <button className="h-10 w-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors border border-primary/20">
+                  <Menu className="h-5 w-5 text-primary" />
+                </button>
               </SheetTrigger>
               <SheetContent
                 side="bottom"
                 hideDefaultClose
-                className="h-auto max-h-[70vh] rounded-t-3xl bg-background/95 backdrop-blur-xl border-t-2 border-primary/20 p-0"
+                className="h-[100dvh] rounded-t-3xl bg-background/95 backdrop-blur-xl border-t-2 border-primary/20 p-0"
               >
                 {/* Decorative glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[150px] bg-primary/10 blur-[60px] rounded-full pointer-events-none" />
@@ -607,12 +607,11 @@ function Header({ scrolled }: { scrolled: boolean }) {
                     {navLinks.map((link, index) => (
                       <motion.button
                         key={link.href}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{
-                          delay: 0.1 + index * 0.05,
-                          duration: 0.3,
-                          ease: "easeOut"
+                          delay: 0.05 + index * 0.03,
+                          duration: 0.2
                         }}
                         onClick={() => scrollToSection(link.href)}
                         className="w-full flex items-center justify-between py-3 px-4 rounded-xl text-foreground font-semibold text-lg hover:bg-primary/5 hover:text-primary active:scale-[0.98] transition-all group"
@@ -626,9 +625,9 @@ function Header({ scrolled }: { scrolled: boolean }) {
                   {/* CTA section */}
                   <div className="px-6 space-y-3 pb-6">
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.35, duration: 0.3 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.15, duration: 0.2 }}
                     >
                       <Button
                         className="w-full h-12 text-base font-semibold"
@@ -644,9 +643,9 @@ function Header({ scrolled }: { scrolled: boolean }) {
                     </motion.div>
 
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4, duration: 0.3 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.18, duration: 0.2 }}
                     >
                       <Button
                         variant="outline"
@@ -665,8 +664,8 @@ function Header({ scrolled }: { scrolled: boolean }) {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.3 }}
-                    className="px-6 pb-8 pt-4 border-t border-border/50 flex items-center justify-center gap-6 text-sm text-muted-foreground"
+                    transition={{ delay: 0.3, duration: 0.25 }}
+                    className="px-6 pb-24 pt-4 border-t border-border/50 flex items-center justify-center gap-6 text-sm text-muted-foreground"
                   >
                     <Link
                       to="/privacy"
