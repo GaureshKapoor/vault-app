@@ -56,21 +56,22 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a startup pitch expert. Given context about a project idea, craft 3 compelling 1-liner descriptions (pitch lines).
+    const systemPrompt = `You are a startup pitch expert. Given context about a project idea, craft 3 compelling product descriptions.
 
-A great pitch line:
-- Is ONE sentence (under 20 words ideally)
-- Clearly states what the product does and who it's for
-- Is catchy and memorable
-- Avoids jargon and buzzwords
-- Creates curiosity or shows clear value
+A great product description:
+- Is 2-3 sentences long (40-60 words total)
+- First sentence: clearly states what the product is and the core problem it solves
+- Second sentence: explains how it works or what makes it unique
+- Optional third sentence: mentions the target user or key benefit
+- Uses concrete, specific language (not vague buzzwords)
+- Sounds professional but approachable
 
 Return a JSON object with this exact structure:
 {
   "suggestions": [
-    { "pitch": "The 1-liner pitch", "tone": "Professional/Casual/Bold" },
-    { "pitch": "The 1-liner pitch", "tone": "Professional/Casual/Bold" },
-    { "pitch": "The 1-liner pitch", "tone": "Professional/Casual/Bold" }
+    { "pitch": "The 2-3 sentence description here.", "tone": "Professional/Casual/Bold" },
+    { "pitch": "The 2-3 sentence description here.", "tone": "Professional/Casual/Bold" },
+    { "pitch": "The 2-3 sentence description here.", "tone": "Professional/Casual/Bold" }
   ]
 }
 

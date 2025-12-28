@@ -33,6 +33,7 @@ interface Idea {
   id: string;
   title: string;
   description: string | null;
+  main_idea: string | null;
   ai_score: number | null;
   status: IdeaStatus;
   category: string | null;
@@ -85,7 +86,7 @@ export default function Home() {
     try {
       const { data, error } = await supabase
         .from("ideas")
-        .select("id, title, description, ai_score, status, category, is_template, sort_order, updated_at, created_at")
+        .select("id, title, description, main_idea, ai_score, status, category, is_template, sort_order, updated_at, created_at")
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
@@ -606,7 +607,7 @@ export default function Home() {
                         </h3>
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                        {idea.description || "No description"}
+                        {idea.main_idea || idea.description || "No description"}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap">
                         {!isSelectMode && idea.status !== "archived" ? (

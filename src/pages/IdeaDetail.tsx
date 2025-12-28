@@ -309,17 +309,26 @@ export default function IdeaDetail() {
     if (!idea) return;
 
     try {
+      // If this was a template, convert it to a user-owned idea
+      const updates = idea.is_template
+        ? { ...selectedFields, is_template: false, sort_order: null }
+        : selectedFields;
+
       const { error } = await supabase
         .from("ideas")
-        .update(selectedFields)
+        .update(updates)
         .eq("id", idea.id);
 
       if (error) throw error;
 
-      setIdea((prev) => prev ? { ...prev, ...selectedFields } : prev);
+      setIdea((prev) => prev ? { ...prev, ...updates } : prev);
+
+      const wasTemplate = idea.is_template;
       toast({
-        title: "Fields updated",
-        description: `Applied ${Object.keys(selectedFields).length} AI suggestions.`,
+        title: wasTemplate ? "It's yours now!" : "Fields updated",
+        description: wasTemplate
+          ? `Applied ${Object.keys(selectedFields).length} AI suggestions. This idea is now yours.`
+          : `Applied ${Object.keys(selectedFields).length} AI suggestions.`,
       });
     } catch (error) {
       console.error("Error applying autofill:", error);
@@ -348,32 +357,35 @@ export default function IdeaDetail() {
       });
 
       if (result) {
-        // Only update score-related fields, not the readiness checks (those are set by autofill)
-        const { error } = await supabase
-          .from("ideas")
-          .update({
-            ai_score: result.ai_score,
-            ai_reasoning: result.ai_reasoning,
-            difficulty: result.suggested_difficulty,
-            priority: result.suggested_priority,
-            sprint_fit: result.suggested_sprint_fit,
-          })
-          .eq("id", idea.id);
-
-        if (error) throw error;
-
-        setIdea((prev) => prev ? {
-          ...prev,
+        // Score-related fields to update
+        const scoreUpdates = {
           ai_score: result.ai_score,
           ai_reasoning: result.ai_reasoning,
           difficulty: result.suggested_difficulty,
           priority: result.suggested_priority,
           sprint_fit: result.suggested_sprint_fit,
-        } : prev);
+        };
 
+        // If this was a template, convert it to a user-owned idea
+        const updates = idea.is_template
+          ? { ...scoreUpdates, is_template: false, sort_order: null }
+          : scoreUpdates;
+
+        const { error } = await supabase
+          .from("ideas")
+          .update(updates)
+          .eq("id", idea.id);
+
+        if (error) throw error;
+
+        setIdea((prev) => prev ? { ...prev, ...updates } : prev);
+
+        const wasTemplate = idea.is_template;
         toast({
-          title: "Idea scored!",
-          description: `AI Score: ${result.ai_score}/10`,
+          title: wasTemplate ? "Scored & it's yours!" : "Idea scored!",
+          description: wasTemplate
+            ? `AI Score: ${result.ai_score}/10. This idea is now yours.`
+            : `AI Score: ${result.ai_score}/10`,
         });
       }
     } catch (error) {
@@ -469,17 +481,26 @@ export default function IdeaDetail() {
     } else {
       // If not editing, save directly to database
       try {
+        // If this was a template, convert it to a user-owned idea
+        const updates = idea?.is_template
+          ? { title: name, is_template: false, sort_order: null }
+          : { title: name };
+
         const { error } = await supabase
           .from("ideas")
-          .update({ title: name })
+          .update(updates)
           .eq("id", id);
 
         if (error) throw error;
 
-        setIdea((prev) => prev ? { ...prev, title: name } : prev);
+        setIdea((prev) => prev ? { ...prev, ...updates } : prev);
+
+        const wasTemplate = idea?.is_template;
         toast({
-          title: "Name updated",
-          description: `Project name set to "${name}"`,
+          title: wasTemplate ? "It's yours now!" : "Name updated",
+          description: wasTemplate
+            ? `Your idea has been renamed to "${name}"`
+            : `Project name set to "${name}"`,
         });
       } catch (error) {
         console.error("Error updating name:", error);
@@ -522,17 +543,26 @@ export default function IdeaDetail() {
     } else {
       // If not editing, save directly to database
       try {
+        // If this was a template, convert it to a user-owned idea
+        const updates = idea?.is_template
+          ? { main_idea: pitch, is_template: false, sort_order: null }
+          : { main_idea: pitch };
+
         const { error } = await supabase
           .from("ideas")
-          .update({ main_idea: pitch })
+          .update(updates)
           .eq("id", id);
 
         if (error) throw error;
 
-        setIdea((prev) => prev ? { ...prev, main_idea: pitch } : prev);
+        setIdea((prev) => prev ? { ...prev, ...updates } : prev);
+
+        const wasTemplate = idea?.is_template;
         toast({
-          title: "Pitch updated",
-          description: "Your 1-liner has been updated.",
+          title: wasTemplate ? "It's yours now!" : "Pitch updated",
+          description: wasTemplate
+            ? "This idea is now yours with the new description."
+            : "Your description has been updated.",
         });
       } catch (error) {
         console.error("Error updating pitch:", error);
