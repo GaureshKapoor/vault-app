@@ -566,20 +566,35 @@ function Header({ scrolled }: { scrolled: boolean }) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px]">
-                <div className="flex flex-col gap-6 mt-8">
-                  <nav className="flex flex-col gap-4">
+              <SheetContent side="bottom" className="h-[98vh] pb-12 bg-gradient-to-b from-background via-background/95 to-muted">
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between">
+                    <VaultLogoWithText />
+                    <button className="text-sm text-muted-foreground" onClick={() => setMobileMenuOpen(false)}>
+                      Close
+                    </button>
+                  </div>
+                  <nav className="flex flex-col gap-5 text-lg font-semibold text-foreground">
                     {navLinks.map((link) => (
                       <button
                         key={link.href}
                         onClick={() => scrollToSection(link.href)}
-                        className="text-foreground hover:text-primary transition-colors text-lg font-medium text-left"
+                        className="text-left py-2 border-b border-border/40"
                       >
                         {link.label}
                       </button>
                     ))}
                   </nav>
-                  <div className="border-t border-border pt-4 flex flex-col gap-3">
+                  <div className="grid gap-3">
+                    <Button
+                      className="w-full"
+                      onClick={() => {
+                        navigate("/auth?mode=signup");
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Get Started
+                    </Button>
                     <Button
                       variant="outline"
                       className="w-full"
@@ -590,15 +605,10 @@ function Header({ scrolled }: { scrolled: boolean }) {
                     >
                       Log in
                     </Button>
-                    <Button
-                      className="w-full"
-                      onClick={() => {
-                        navigate("/auth?mode=signup");
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      Create account
-                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <Link to="/privacy">Privacy</Link>
+                    <Link to="/terms">Terms</Link>
                   </div>
                 </div>
               </SheetContent>
