@@ -5,5 +5,7 @@ dist/
 .env.local
 .DS_Store
 supabase/.temp/
-.claude/settings.local.json 
-
+.claude/
+apps/*/node_modules/
+apps/*/.expo/
+apps/ios/.expo/
