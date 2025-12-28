@@ -270,7 +270,8 @@ export default function Progress() {
 
   return (
     <div className="bg-background min-h-screen">
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
+      {/* Header - fixed at top */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4">
           <h1 className="text-xl font-bold text-foreground">Progress overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -279,7 +280,8 @@ export default function Progress() {
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-8">
+      {/* Content - with top padding for fixed header */}
+      <div className="pt-[92px] px-4 py-6 space-y-8">
         {/* Hero summary */}
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="bg-card border border-border rounded-2xl p-5 flex flex-col gap-4">

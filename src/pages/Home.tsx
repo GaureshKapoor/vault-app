@@ -393,9 +393,9 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
+    <div className="bg-background min-h-0">
+      {/* Header - fixed at top */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="w-20 flex justify-start">
             <Link to="/feed" className="p-2 -ml-2 rounded-lg hover:bg-accent transition-colors">
@@ -513,9 +513,11 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Select Mode Action Bar */}
-      {isSelectMode && (
-        <div className="sticky top-[120px] z-30 bg-background/95 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between">
+      {/* Content - with top padding for fixed header */}
+      <div className="pt-[136px]">
+        {/* Select Mode Action Bar */}
+        {isSelectMode && (
+          <div className="fixed top-[136px] left-0 right-0 z-30 bg-background/95 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {selectedIds.size} selected
           </span>
@@ -543,7 +545,7 @@ export default function Home() {
 
       {/* Ideas List with Pull-to-Refresh */}
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="px-4 py-4 space-y-3">
+        <div className={cn("px-4 py-4 space-y-3", isSelectMode && "pt-[68px]")}>
           {/* Add New Idea Card */}
           {!isSelectMode && (
             <button
@@ -686,6 +688,7 @@ export default function Home() {
         )}
         </div>
       </PullToRefresh>
+      </div>
     </div>
   );
 }

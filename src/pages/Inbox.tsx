@@ -256,7 +256,8 @@ export default function Inbox() {
 
   return (
     <div className="bg-background min-h-screen">
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
+      {/* Header - fixed at top */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4">
           <h1 className="text-xl font-bold text-foreground">Inbox</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -265,18 +266,20 @@ export default function Inbox() {
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-8">
+      {/* Content - with top padding for fixed header */}
+      <div className="pt-[92px] px-4 py-6 space-y-8">
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="rounded-2xl border border-dashed border-border bg-card/50 p-6 text-center"
+          className="rounded-2xl border border-dashed border-border bg-card/50 p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-card transition-colors"
+          onClick={() => navigate("/idea/new", { state: { fromInbox: true } })}
         >
           <div className="w-16 h-16 rounded-full bg-primary-soft mx-auto mb-4 flex items-center justify-center">
             <Plus className="w-8 h-8 text-primary" />
           </div>
           <p className="text-lg font-semibold text-foreground">Ideas are the future</p>
-          <p className="text-sm text-muted-foreground mt-1">Start capturing your thoughts</p>
+          <p className="text-sm text-muted-foreground mt-1">Tap to create a new idea</p>
         </motion.section>
 
         <motion.section

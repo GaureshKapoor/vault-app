@@ -442,9 +442,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="flex flex-col bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
+    <div className="flex flex-col bg-background min-h-0">
+      {/* Header - fixed at top */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">Profile</h1>
           {!isEditing ? (
@@ -479,7 +479,8 @@ export default function Profile() {
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
+      {/* Content - with top padding for fixed header */}
+      <div className="pt-[84px] px-4 py-6 space-y-6">
         {/* Avatar & Name */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}

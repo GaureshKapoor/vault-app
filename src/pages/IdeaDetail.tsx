@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Edit2, Check, X, Rocket, Target, Lightbulb, Layers, Share, Loader2, Save, Sparkles, Trash2, Lock, Unlock, RotateCcw, Zap, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -122,8 +122,13 @@ const statusOptions: IdeaStatus[] = ["idea", "shortlisted", "building", "paused"
 export default function IdeaDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Check if we came from the NewIdea page and from where
+  const fromNewIdea = location.state?.fromNewIdea === true;
+  const fromInbox = location.state?.fromInbox === true;
   const { autofillIdea, scoreIdea, suggestName, draftPitch, isLoading: isAILoading, isSuggestingName, isDraftingPitch } = useAIOperations();
 
   const [idea, setIdea] = useState<Idea | null>(null);
@@ -761,15 +766,22 @@ export default function IdeaDetail() {
   };
 
   return (
-    <div className="bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
+    <div className="bg-background min-h-0">
+      {/* Header - fixed at top */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => {
               if (fromOnboarding && !hasNavigatedBack.current) {
                 hasNavigatedBack.current = true;
                 navigate("/home", { replace: true });
+              } else if (fromNewIdea) {
+                // After creating a new idea, go back to where we came from
+                if (fromInbox) {
+                  navigate("/inbox", { replace: true });
+                } else {
+                  navigate("/home", { replace: true });
+                }
               } else {
                 navigate(-1);
               }
@@ -862,8 +874,10 @@ export default function IdeaDetail() {
         </div>
       </header>
 
-      {/* Template Banner */}
-      {isTemplate && (
+      {/* Content - with top padding for fixed header */}
+      <div className="pt-[64px]">
+        {/* Template Banner */}
+        {isTemplate && (
         <div className="bg-muted/50 border-b border-border px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -1361,6 +1375,7 @@ export default function IdeaDetail() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

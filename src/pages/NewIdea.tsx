@@ -47,8 +47,9 @@ export default function NewIdea() {
   const { toast } = useToast();
   const { autofillIdea, isLoading: isAutofilling } = useAIOperations();
 
-  // Check if we're creating from an inbox thought
+  // Check if we're creating from an inbox thought or from inbox page
   const inboxThought = location.state?.inboxThought as string | undefined;
+  const fromInbox = location.state?.fromInbox === true || !!inboxThought;
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -115,11 +116,20 @@ export default function NewIdea() {
       return;
     }
 
-    if (!coreProblem.trim() || !coreValueProp.trim()) {
+    if (!mainIdea.trim()) {
       toast({
         variant: "destructive",
-        title: "Missing fields",
-        description: "Please fill in the Core Problem and Value Proposition.",
+        title: "Description required",
+        description: "Please add a description for your idea.",
+      });
+      return;
+    }
+
+    if (!category) {
+      toast({
+        variant: "destructive",
+        title: "Category required",
+        description: "Please select a category for your idea.",
       });
       return;
     }
@@ -137,11 +147,11 @@ export default function NewIdea() {
         .insert({
           user_id: user.id,
           title: title.trim(),
-          category: category || null,
-          main_idea: mainIdea.trim() || null,
-          description: mainIdea.trim() || null,
-          core_problem: coreProblem.trim(),
-          core_value_proposition: coreValueProp.trim(),
+          category: category,
+          main_idea: mainIdea.trim(),
+          description: mainIdea.trim(),
+          core_problem: coreProblem.trim() || mainIdea.trim(),
+          core_value_proposition: coreValueProp.trim() || mainIdea.trim(),
           core_loop: coreLoop.trim() || null,
           mvp_shape: mvpShape.trim() || null,
           target_user: targetUser.trim() || null,
@@ -157,8 +167,8 @@ export default function NewIdea() {
         description: "Your new idea has been saved.",
       });
 
-      // Navigate to the new idea's detail page
-      navigate(`/idea/${data.id}`);
+      // Navigate to the new idea's detail page with state indicating origin
+      navigate(`/idea/${data.id}`, { state: { fromNewIdea: true, fromInbox } });
     } catch (error) {
       console.error("Error saving idea:", error);
       toast({
@@ -172,9 +182,9 @@ export default function NewIdea() {
   };
 
   return (
-    <div className="bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
+    <div className="bg-background min-h-0">
+      {/* Header - fixed at top */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => navigate(-1)}
@@ -199,7 +209,8 @@ export default function NewIdea() {
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
+      {/* Content - with top padding for fixed header */}
+      <div className="pt-[72px] px-4 py-6 space-y-6">
         {/* Level 1: Identity */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
