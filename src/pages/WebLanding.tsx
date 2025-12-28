@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AnimatePresence, motion, useInView } from "framer-motion";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Menu, 
-  Sparkles, 
-  Target, 
-  Archive, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  Sparkles,
+  Target,
+  Archive,
   Inbox,
   Lightbulb,
   Zap,
@@ -18,7 +18,8 @@ import {
   Globe,
   Linkedin,
   Instagram,
-  Youtube
+  Youtube,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet";
 import {
   Accordion,
@@ -566,50 +568,122 @@ function Header({ scrolled }: { scrolled: boolean }) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[98vh] pb-12 bg-gradient-to-b from-background via-background/95 to-muted">
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="flex items-center justify-between">
-                    <VaultLogoWithText />
-                    <button className="text-sm text-muted-foreground" onClick={() => setMobileMenuOpen(false)}>
-                      Close
-                    </button>
+              <SheetContent
+                side="bottom"
+                hideDefaultClose
+                className="h-auto max-h-[70vh] rounded-t-3xl bg-background/95 backdrop-blur-xl border-t-2 border-primary/20 p-0"
+              >
+                {/* Decorative glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[150px] bg-primary/10 blur-[60px] rounded-full pointer-events-none" />
+
+                <div className="relative">
+                  {/* Handle bar indicator */}
+                  <div className="flex justify-center pt-3 pb-4">
+                    <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
                   </div>
-                  <nav className="flex flex-col gap-5 text-lg font-semibold text-foreground">
-                    {navLinks.map((link) => (
+
+                  {/* Header with logo and close */}
+                  <div className="flex items-center justify-between px-6 mb-4">
+                    <VaultLogoWithText />
+                    <SheetClose asChild>
                       <button
-                        key={link.href}
-                        onClick={() => scrollToSection(link.href)}
-                        className="text-left py-2 border-b border-border/40"
+                        className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                        aria-label="Close menu"
                       >
-                        {link.label}
+                        <X className="h-4 w-4 text-muted-foreground" />
                       </button>
+                    </SheetClose>
+                  </div>
+
+                  {/* Section label */}
+                  <div className="px-6 mb-3">
+                    <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                      Navigate
+                    </span>
+                  </div>
+
+                  {/* Nav links with staggered animation */}
+                  <nav className="px-6 space-y-1 mb-6">
+                    {navLinks.map((link, index) => (
+                      <motion.button
+                        key={link.href}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          delay: 0.1 + index * 0.05,
+                          duration: 0.3,
+                          ease: "easeOut"
+                        }}
+                        onClick={() => scrollToSection(link.href)}
+                        className="w-full flex items-center justify-between py-3 px-4 rounded-xl text-foreground font-semibold text-lg hover:bg-primary/5 hover:text-primary active:scale-[0.98] transition-all group"
+                      >
+                        <span>{link.label}</span>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                      </motion.button>
                     ))}
                   </nav>
-                  <div className="grid gap-3">
-                    <Button
-                      className="w-full"
-                      onClick={() => {
-                        navigate("/auth?mode=signup");
-                        setMobileMenuOpen(false);
-                      }}
+
+                  {/* CTA section */}
+                  <div className="px-6 space-y-3 pb-6">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35, duration: 0.3 }}
                     >
-                      Get Started
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => {
-                        navigate("/auth?mode=login");
-                        setMobileMenuOpen(false);
-                      }}
+                      <Button
+                        className="w-full h-12 text-base font-semibold"
+                        variant="default"
+                        onClick={() => {
+                          navigate("/auth?mode=signup");
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Get Started Free
+                      </Button>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, duration: 0.3 }}
                     >
-                      Log in
-                    </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full h-12 text-base font-semibold border-border/50"
+                        onClick={() => {
+                          navigate("/auth?mode=login");
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        Log in
+                      </Button>
+                    </motion.div>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <Link to="/privacy">Privacy</Link>
-                    <Link to="/terms">Terms</Link>
-                  </div>
+
+                  {/* Footer links */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.3 }}
+                    className="px-6 pb-8 pt-4 border-t border-border/50 flex items-center justify-center gap-6 text-sm text-muted-foreground"
+                  >
+                    <Link
+                      to="/privacy"
+                      className="hover:text-foreground transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Privacy
+                    </Link>
+                    <span className="text-border">|</span>
+                    <Link
+                      to="/terms"
+                      className="hover:text-foreground transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Terms
+                    </Link>
+                  </motion.div>
                 </div>
               </SheetContent>
             </Sheet>
