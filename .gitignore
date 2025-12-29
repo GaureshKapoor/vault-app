@@ -1,11 +1,65 @@
+# Dependencies
 node_modules/
-.next/
+apps/*/node_modules/
+
+# Build outputs
 dist/
+apps/*/dist/
+.next/
+*.tsbuildinfo
+
+# Environment & Secrets
 .env
 .env.local
+.env.*.local
+
+# IDE & OS
 .DS_Store
-supabase/.temp/
+*.swp
+*.swo
+.idea/
+.vscode/
+*.code-workspace
+
+# Claude Code
 .claude/
-apps/*/node_modules/
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+
+# Expo
 apps/*/.expo/
-apps/ios/.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# iOS / Xcode
+apps/ios-capacitor/ios/App/Pods/
+apps/ios-capacitor/ios/DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+
+# Misc
+*.pem
+.cache/

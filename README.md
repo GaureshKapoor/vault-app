@@ -12,116 +12,179 @@ Vault helps you transform scattered ideas into shipped products through a struct
 4. **Focus** - Commit to ONE idea at a time (building slot)
 5. **Ship** - Track progress through lifecycle stages
 
+## Project Structure
+
+```
+vault-app/
+├── apps/
+│   ├── web/                 # Vite + React web app
+│   │   ├── src/
+│   │   ├── public/
+│   │   ├── vite.config.ts
+│   │   ├── tailwind.config.ts
+│   │   └── package.json
+│   │
+│   ├── ios-expo/            # Expo + React Native
+│   │   ├── src/screens/
+│   │   ├── assets/
+│   │   ├── app.config.js
+│   │   ├── metro.config.js
+│   │   └── package.json
+│   │
+│   └── ios-capacitor/       # Capacitor (web wrapped in native shell)
+│       ├── ios/             # Xcode project
+│       └── capacitor.config.ts
+│
+├── shared/                  # Shared code
+│   ├── hooks/
+│   ├── lib/
+│   └── constants/
+│
+├── supabase/                # Backend
+│   ├── functions/           # Edge functions
+│   └── migrations/          # Database schema
+│
+├── plans/                   # Feature plans
+├── .env                     # Environment variables
+├── package.json             # Workspace root
+└── vercel.json              # Deployment root
+
+```
+
 ## Platforms
 
-| Platform | Status | Landing Page |
-|----------|--------|--------------|
-| Web (Desktop/Tablet) | Active | Full |
-| Web (Mobile browser) | Active | Full |
-| iOS App | In Development | Minimal hero |
+| Platform | Tech | Status |
+|----------|------|--------|
+| Web | Vite + React | Active |
+| iOS (Expo) | Expo + React Native | In Development |
+| iOS (Capacitor) | Web wrapped in native shell | Available |
 
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+ (recommended: use [nvm](https://github.com/nvm-sh/nvm))
-- npm or bun
+- Node.js 18+
+- npm
 - Xcode (for iOS development)
-- CocoaPods (for iOS development)
 
 ### Installation
 
 ```bash
-# Clone the repository
+# Clone and install
 git clone <your-repo-url>
 cd vault-app
-
-# Install dependencies
 npm install
 
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your Supabase credentials
 
-# Start development server
-npm run dev
+# Start web development
+npm run web:dev
 ```
 
-The app will be available at `http://localhost:5173`
+Web app available at `http://localhost:8080`
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run web:dev` | Start web dev server |
+| `npm run web:build` | Build web for production |
+| `npm run web:preview` | Preview production build |
+| `npm run web:lint` | Lint web code |
+| `npm run expo:start` | Start Expo dev server |
+| `npm run expo:ios` | Run Expo on iOS simulator |
+| `npm run capacitor:sync` | Sync web build to Capacitor |
+| `npm run capacitor:open` | Open Xcode project |
 
 ### iOS Development
 
+**Expo (React Native):**
 ```bash
-# Build web assets
-npm run build
+npm run expo:start
+# Scan QR code with Expo Go app, or press 'i' for simulator
+```
 
-# Sync to iOS project
-npx cap sync ios
-
-# Open in Xcode
-npx cap open ios
-
-# Or run in simulator directly
-npx cap run ios
+**Capacitor (Web wrapper):**
+```bash
+npm run web:build
+npm run capacitor:sync
+npm run capacitor:open
+# Build and run from Xcode
 ```
 
 ### Environment Variables
 
 ```env
-VITE_SUPABASE_PROJECT_ID=your-project-id
-VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+# Web (Vite)
 VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+VITE_SUPABASE_PROJECT_ID=your-project-id
+
+# iOS (Expo)
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# AI Features (Edge Functions)
+OPENROUTER_API_KEY=your-openrouter-key
 ```
+
+## Tech Stack
+
+### Frontend (Web)
+- React 18, Vite 5, TypeScript 5
+- Tailwind CSS, shadcn/ui
+- Framer Motion, TanStack Query
+- React Router DOM
+
+### Frontend (iOS - Expo)
+- Expo SDK 54, React Native 0.81
+- React Navigation
+- Lucide React Native icons
+
+### Frontend (iOS - Capacitor)
+- Same as web, wrapped in native shell
+- Capacitor 8 for native APIs
+
+### Backend
+- Supabase (PostgreSQL, Auth, Edge Functions)
+- OpenRouter (AI provider)
+
+## Features
+
+### Working
+- Email/password + Google OAuth authentication
+- Password reset via email
+- AI Autofill, Scoring, Chat, Idea Generator, Name Suggestion, Pitch Drafting
+- Profile editing with avatar picker
+- Idea CRUD with 6-state lifecycle
+- One-building-at-a-time enforcement
+- Dark/light theme
+- Responsive mobile layout
+
+### Stubbed
+- Payments (Stripe exists, checkout skipped)
+- Feed/community features
 
 ## Supabase Setup
 
-Vault uses Supabase for authentication, database, and edge functions.
-
-### Database Tables
-- **profiles** - User settings and subscription info
-- **ideas** - Core idea data with AI scoring fields
-- **idea_notes** - Notes attached to ideas
-
-### Migrations
-Apply migrations in order from `supabase/migrations/`:
-1. Base schema (tables, RLS, triggers)
-2. Subscription fields
-3. Template ideas
-4. Sort order
-
 ### Edge Functions (10 deployed)
 Located in `supabase/functions/`:
-- `autofill-idea` - AI generates idea fields from title/category
-- `score-idea` - AI scores idea 0-10 with reasoning
+- `autofill-idea` - AI generates idea fields
+- `score-idea` - AI scores idea 0-10
 - `ai-chat` - Conversational AI assistant
 - `suggest-name` - AI suggests project names
-- `draft-pitch` - AI drafts 1-liner descriptions
-- `generate-idea` - AI generates complete ideas from gist/filters
+- `draft-pitch` - AI drafts descriptions
+- `generate-idea` - AI generates complete ideas
 - `create-checkout-session` - Stripe checkout (stubbed)
-- `delete-user` - Complete account deletion
-- `validate-status-change` - Lifecycle transition rules
+- `delete-user` - Account deletion
+- `validate-status-change` - Lifecycle rules
 - `_shared/ai-client` - Reusable OpenRouter client
 
 ### Edge Function Authentication
-All Edge Functions use manual JWT validation (not `verify_jwt = true` config which has issues). Each function:
-1. Checks for `Authorization` header
-2. Creates an authenticated Supabase client with that header
-3. Calls `supabase.auth.getUser()` to validate the token
+All Edge Functions use manual JWT validation. If AI features return 401 errors, sign out and sign back in to get a fresh token.
 
-If AI features return 401 errors, **sign out and sign back in** to get a fresh JWT token. See [CLAUDE.md](.claude/CLAUDE.md) for the full auth pattern.
-
-## Using Vault
-
-### Core Workflow
-
-1. **Sign up** with email/password
-2. **Complete onboarding** (7 steps)
-3. **Capture ideas** in the Inbox (quick thoughts)
-4. **Create structured ideas** with full details
-5. **Evaluate** using difficulty, priority, sprint fit
-6. **Move to "building"** when ready to commit
-7. **Track progress** through shipped
-
-### Idea Lifecycle
+## Idea Lifecycle
 
 ```
 idea → shortlisted → building → shipped
@@ -133,91 +196,7 @@ idea → shortlisted → building → shipped
 
 **Key constraint**: Only ONE idea can be "building" at a time.
 
-### Idea Fields
-- **Title** - Short name
-- **Category** - Type of idea (App, Tool, Service, etc.)
-- **Core Problem** - What problem does this solve?
-- **Value Proposition** - What's unique about your solution?
-- **Core Loop** - What's the main user action?
-- **MVP Shape** - What's the minimum to launch?
-- **Target User** - Who is this for?
-
-## Tech Stack
-
-### Frontend
-- React 18.3, Vite 5.4, TypeScript 5.8
-- Tailwind CSS 3.4, shadcn/ui (50+ components)
-- Framer Motion 12.23 (animations)
-- TanStack Query 5.83 (data fetching)
-- React Router DOM 6.30 (routing)
-
-### Backend
-- Supabase (PostgreSQL, Auth, Edge Functions)
-- OpenRouter (AI provider - model agnostic)
-
-### Mobile
-- Capacitor 8.0 (iOS wrapper)
-
-## Features
-
-### Working
-- Email/password + Google OAuth authentication
-- Password reset via email
-- AI Autofill (generates idea fields from title/category)
-- AI Scoring (0-10 score with reasoning)
-- AI Chat Assistant (context-aware with user's ideas)
-- AI Idea Generator (generate ideas from gist or random with filters)
-- AI Name Suggestion (suggests 3 project names with reasoning)
-- AI Pitch Drafting (generates compelling 1-liner descriptions)
-- Profile editing with avatar picker
-- Idea CRUD with 6-state lifecycle
-- One-building-at-a-time enforcement with clear error messaging
-- Dark/light theme (minimal, clean aesthetic inspired by Notion/Linear)
-- Responsive mobile layout with proper header spacing
-
-### Stubbed
-- Payments (Stripe exists, checkout skipped - all users free tier)
-- Feed/community features
-- Export functionality
-
-## Current Limitations
-
-- **Inbox is local-only** - Thoughts stored in localStorage
-- **No email verification** - Auto-confirm enabled
-- **Notes are append-only** - Can't edit or delete
-- **Payments stubbed** - All users get free tier
-- **iOS app in development** - Capacitor wrapper being implemented
-
-## Project Structure
-
-```
-vault-app/
-├── src/
-│   ├── pages/           # Route components
-│   │   ├── WebLanding.tsx   # Full landing (web)
-│   │   ├── IOSLanding.tsx   # Minimal landing (iOS app)
-│   │   └── ...
-│   ├── components/      # Reusable UI
-│   │   ├── layout/      # App shell, navigation
-│   │   └── ui/          # shadcn/ui primitives
-│   ├── hooks/           # Custom React hooks
-│   ├── integrations/    # Supabase client
-│   └── lib/             # Utilities
-│       └── platform.ts  # Platform detection (isIOSApp, isWebBrowser)
-├── ios/                 # Capacitor iOS project (Xcode)
-├── supabase/
-│   ├── migrations/      # Database schema
-│   └── functions/       # Edge functions
-├── plans/               # Feature implementation plans
-└── capacitor.config.ts  # iOS app configuration
-```
-
 ## Documentation
 
-- [PRD.md](PRD.md) - Product requirements and feature scope
-- [plans/web-vs-ios.md](plans/web-vs-ios.md) - Platform strategy
-- [.claude/CLAUDE.md](.claude/CLAUDE.md) - Claude Code working instructions
-
-## Contributing
-
-This project uses feature-by-feature development. See [.claude/CLAUDE.md](.claude/CLAUDE.md) for workflow guidelines.
+- [PRD.md](PRD.md) - Product requirements
+- [.claude/CLAUDE.md](.claude/CLAUDE.md) - Development workflow

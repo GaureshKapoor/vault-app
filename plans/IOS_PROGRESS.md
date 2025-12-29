@@ -4,12 +4,12 @@
 
 - Expo CLI requires Node ≥20.19. We scaffolded under Node 17 (with warnings) but will use Node 22 via `nvm` per-shell when running the iOS app. Web/Capacitor remains on the existing Node version; no global change was made.
 
-- All new code lives under `apps/` (currently `apps/ios`, `apps/shared`, optional `apps/web`). The Vite web client stays untouched.
+- All new code lives under `apps/` (currently `apps/ios/expo`, `shared/`, optional `apps/web`). The Vite web client stays untouched.
 
-- iOS shares business logic via `apps/shared` so hooks/types remain consistent across platforms.
+- iOS shares business logic via `shared/` so hooks/types remain consistent across platforms.
 
 ## 1. Shared Foundation
-- Added `apps/shared` with Supabase client, design tokens, platform helpers, and reusable hooks (`useAIOperations`, `useAIChat`, `useSupabaseSession`, `useAuthGuard`).
+- Added `shared/` with Supabase client, design tokens, platform helpers, and reusable hooks (`useAIOperations`, `useAIChat`, `useSupabaseSession`, `useAuthGuard`).
 - iOS screens import from shared modules; no changes to existing web code.
 
 ## 2. Auth Flow
@@ -54,7 +54,7 @@
 
 ## 10. Config & Docs
 - Added Expo config (`app.config.js`) with schema, bundle identifier, and environment variable wiring for Supabase.
-- Documented how to bootstrap the iOS app (Node version, env setup, npm scripts) in `apps/ios/README.md`.
+- Documented how to bootstrap the iOS app (Node version, env setup, npm scripts) in `apps/ios/expo/README.md`.
 
 ## TODOs
 - [x] Recreate full 7-step onboarding (types, goals, tools, first idea) to match the web flow exactly.
