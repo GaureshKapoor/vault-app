@@ -29,13 +29,13 @@ Raw Ideas → Structured Fields → Evaluation → Ranking → Lifecycle → Shi
 ### Current Platforms
 | Platform | Technology | Landing Page | Status |
 |----------|------------|--------------|--------|
-| Web (Desktop/Tablet) | React + Vite | Full landing page | Active |
-| Web (Mobile browser) | React + Vite | Full landing page | Active |
-| iOS App | Capacitor (WebView) | Minimal hero only | In Development |
+| Web (Desktop/Mobile) | React + Vite | Full landing page | Active |
+| iOS (Capacitor shell) | React + Vite packaged via Capacitor | Hero-only in-app start | Live |
+| iOS (Expo native) | Expo + React Native + shared hooks | Minimal hero (inside app) | Beta |
 
 ### Future Considerations
-- **Android App**: Can be added via Capacitor when needed
-- **Expo Migration**: If native performance becomes critical, evaluate after 3 months of user feedback
+- **Android App**: Port the Capacitor shell once iOS App Store flow is stable
+- **Expo Rollout**: Graduate the Expo build to production after telemetry + user feedback
 
 ---
 
@@ -43,10 +43,10 @@ Raw Ideas → Structured Fields → Evaluation → Ranking → Lifecycle → Shi
 
 | Platform | Provider | Status |
 |----------|----------|--------|
-| Web (browser) | Stripe | Stubbed - all users get free tier |
+| Web (browser) | Stripe Checkout via `create-checkout-session` | Live (7-day trial fallback if price ID missing) |
 | iOS App | Apple IAP | Future - after App Store approval |
 
-Current behavior: Pricing page exists, Stripe checkout stubbed. All users receive free tier with active subscription status.
+Current behavior: Pricing lets users choose Free (updates `profiles` directly) or Pro (Stripe checkout handled via edge function success/cancel URLs). If `STRIPE_PRICE_ID` isn’t configured we auto-create a trial subscription. Billing enforcement remains manual until Stripe webhooks + Apple IAP ship.
 
 ---
 
@@ -79,6 +79,7 @@ Current behavior: Pricing page exists, Stripe checkout stubbed. All users receiv
 - **Read**: List view on Home, detail view on /idea/:id
 - **Update**: All fields editable in detail view
 - **Archive**: Soft delete (status = "archived"), can be restored
+- **Templates**: New users get three `is_template` ideas pinned to the top of Home until they edit/save them
 
 #### Idea Lifecycle
 Six states with controlled transitions (can be archived anytime):
@@ -97,6 +98,7 @@ idea → shortlisted → building → shipped
 - Priority (1-5 scale)
 - Sprint Fit (1-5 scale)
 - Readiness checks: Clear problem, Simple loop, Deployable MVP
+- Share/export controls: Idea Detail downloads TXT summaries, Home exports CSV/share sheet snapshots
 
 #### Idea Notes
 - Append-only notes per idea
@@ -108,6 +110,8 @@ idea → shortlisted → building → shipped
 - Editable fields: display name, phone, location, bio
 - Email display (read-only, from auth)
 - User preferences from onboarding
+- Delete account CTA calls the `delete-user` function (removes data + auth + clears caches)
+- Privacy/Terms/Guide links accessible inside Profile
 
 #### Inbox (Raw Thoughts)
 - Quick capture of unstructured thoughts
@@ -126,6 +130,19 @@ idea → shortlisted → building → shipped
 - 7-step setup after first login
 - Captures: user type, experience, goals, time commitment, preferences
 - Creates first idea during onboarding
+- Expo app ships a lightweight version that updates the same profile fields and can seed the first idea
+
+#### Progress Dashboard
+- Focus slot tile enforces the one-building rule and links into /build for ritual planning
+- Pipeline donut + bar charts (Recharts) summarize counts per status
+- Momentum ring + stuck list highlight ideas untouched for 7+ days with shortcuts to AI coaching
+- Timeline shows last 5 lifecycle events with inline status dropdown
+
+#### AI Idea Generator
+- Mode toggle on /ai switches between Chat and Generate views
+- Quick filters (category/difficulty) plus gist prompt
+- Generated cards persist locally (`vault_generated_ideas`) until saved or cleared
+- Actions: Autofill, Quick Save (creates idea + background scoring), Edit & Save dialog, remove/expand toggles
 
 ### Stubbed / Not Yet Implemented
 
@@ -139,9 +156,18 @@ idea → shortlisted → building → shipped
 - Shows empty state "Coming soon"
 - No backend implementation
 
-#### Integrations & Export
-- Mentioned in landing page pricing
-- No implementation exists
+#### Build Plugins / Start Building
+- /build route teases Lovable, Replit, Cursor, Vercel plugins
+- UI only — no integrations yet
+
+#### Inbox Sync & Reminders
+- Web inbox stays localStorage-only until `inbox_thoughts` lands
+- Expo inbox surfaces sync actions but the backend table is still pending
+- `useReminderPrompt` placeholder alerts instead of scheduling push notifications
+
+#### Payments Automation
+- Stripe checkout works but no webhooks yet to flip `subscription_status`
+- Apple IAP + StoreKit integration blocked until App Store submission
 
 ---
 
@@ -160,6 +186,8 @@ idea → shortlisted → building → shipped
 | TanStack Query | 5.83 | Data fetching & caching |
 | React Hook Form + Zod | 7.61 | Form handling & validation |
 | Lucide React | 0.462 | Icons |
+| Recharts | 2.15 | Pipeline donut + bar charts |
+| Sonner / Radix Toast | - | Notifications + toasts |
 
 ### Backend
 | Technology | Purpose |
@@ -168,19 +196,28 @@ idea → shortlisted → building → shipped
 | PostgreSQL | Database engine |
 | RLS | Row-level security for data isolation |
 | OpenRouter | AI provider (model-agnostic LLM access) |
+| Stripe | Checkout + subscription trial management |
 
-### Edge Functions (10 deployed)
+### Mobile (Expo)
+| Technology | Purpose |
+|------------|---------|
+| Expo SDK 54 / React Native 0.81 | Native client |
+| React Navigation | Tab + stack routing mirroring web |
+| AsyncStorage | Local persistence for AI chat + inbox |
+| `shared/` hooks | Reuse Supabase + AI logic across platforms |
+
+### Edge Functions (9 deployed + shared client)
 | Function | Purpose |
 |----------|---------|
 | `autofill-idea` | AI generates idea fields from title/category |
 | `score-idea` | AI scores idea 0-10 with reasoning |
-| `ai-chat` | Conversational AI assistant |
+| `ai-chat` | Conversational AI assistant with idea context |
 | `suggest-name` | AI suggests project names |
 | `draft-pitch` | AI drafts 1-liner descriptions |
 | `generate-idea` | AI generates complete ideas from gist/filters |
-| `create-checkout-session` | Stripe checkout (stubbed) |
-| `delete-user` | Complete account deletion |
-| `validate-status-change` | Lifecycle transition validation |
+| `create-checkout-session` | Kicks off Stripe Checkout session + redirects |
+| `delete-user` | Complete account deletion + cascade cleanup |
+| `validate-status-change` | Lifecycle transition validation (service-role) |
 | `_shared/ai-client` | Reusable OpenRouter client |
 
 ### Database Schema
@@ -205,7 +242,7 @@ ideas
 ├── difficulty, priority, sprint_fit (1-5)
 ├── ai_score (0-10), ai_reasoning
 ├── check_clear_problem, check_simple_loop, check_deployable_mvp
-├── is_template, sort_order
+├── is_template, sort_order (seed templates pinned until renamed)
 └── created_at, updated_at
 
 idea_notes
@@ -231,14 +268,16 @@ idea_notes
 ## Future Vision (No Timelines)
 
 ### Near-term Goals
-- Persist inbox thoughts to database
-- Wire status validation to backend
+- Persist inbox thoughts to database (web + Expo)
+- Wire UI into `/validate-status-change` to show server messages
+- Add Stripe webhooks to auto-manage subscription tiers
+- Flesh out Start Building plugins with at least one integration
 
 ### Medium-term Goals
-- Export ideas to various formats
-- Integrations with other tools
+- Export ideas to various formats (Notion, PDF, etc.)
+- Integrations with other tools (Lovable, Replit, Cursor, Vercel)
 - Collaboration / sharing features
-- Mobile app (iOS via React Native/Expo)
+- Expo parity + Android release
 
 ### Long-term Vision
 - Community feed for public ideas
@@ -250,12 +289,13 @@ idea_notes
 
 ## Current Limitations
 
-1. **Inbox is localStorage only** - data lost if browser cleared
-2. **No email verification** - auto-confirm is enabled
-3. **Notes are append-only** - can't edit or delete
-4. **Payments stubbed** - Stripe integration exists but checkout skipped; all users get free tier
-5. **iOS app in development** - Capacitor wrapper being implemented
-6. **Dev reset tool exposed** - reset & restart onboarding button will revert to dev-only before launch
+1. **Web inbox is localStorage only** – browser resets wipe thoughts until Supabase table ships
+2. **Expo inbox sync blocked** – UI expects an `inbox_thoughts` table that isn’t provisioned yet
+3. **Notes are append-only** – no edit/delete UX yet
+4. **Payments lack automation** – Stripe checkout exists but no webhook enforcement; Apple IAP pending
+5. **Status validation not wired** – UI enforces one-building locally and never calls `/validate-status-change`
+6. **Start Building + Feed are placeholders** – UI teases integrations/community with no backend
+7. **Push notifications/IAPs missing** – reminder hook + Apple billing are stubs, so mobile relies on manual rituals
 
 ### Resolved (previously limitations)
 - ~~AI functions depend on Lovable AI Gateway~~ → Now using OpenRouter
