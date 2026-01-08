@@ -22,6 +22,10 @@ config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
   '@supabase/supabase-js': path.resolve(projectRoot, 'node_modules/@supabase/supabase-js'),
   '@react-native-async-storage/async-storage': path.resolve(projectRoot, 'node_modules/@react-native-async-storage/async-storage'),
+  'expo-constants': path.resolve(projectRoot, 'node_modules/expo-constants'),
 };
+
+// Prefer .native.js files over .js for React Native
+config.resolver.sourceExts = ['native.js', ...config.resolver.sourceExts];
 
 module.exports = config;

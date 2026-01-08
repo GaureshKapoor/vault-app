@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start --port 8081",
-    "ios": "expo start --ios --port 8081"
+    "ios": "expo start --ios --port 8081",
+    "android": "expo run:android"
   },
   "dependencies": {
     "@babel/runtime": "^7.26.0",
@@ -16,6 +17,7 @@
     "@ungap/structured-clone": "^1.2.0",
     "dotenv": "^16.4.5",
     "expo": "~54.0.30",
+    "expo-constants": "^18.0.13",
     "expo-status-bar": "~3.0.9",
     "invariant": "^2.2.4",
     "lucide-react-native": "^0.562.0",
