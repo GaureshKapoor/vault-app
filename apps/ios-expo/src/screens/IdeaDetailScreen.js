@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import { supabase } from '../../../shared/lib/supabase';
-import { useAIOperations } from '../../../shared/hooks/useAIOperations';
+import { supabase } from '../../shared/lib/supabase';
+import { useAIOperations } from '../../shared/hooks/useAIOperations';
 import NotesSection from '../components/NotesSection';
 import AISuggestButton from '../components/AISuggestButton';
 import ActionDrawer from '../components/ActionDrawer';

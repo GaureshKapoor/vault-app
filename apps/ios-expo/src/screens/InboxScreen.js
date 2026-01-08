@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { supabase } from '../../../shared/lib/supabase';
+import { supabase } from '../../shared/lib/supabase';
 
 const STORAGE_KEY = 'vault-ios-inbox';
 const prompts = ['Customer pain: ', 'Workflow tweak: ', 'Voice memo transcription: ', 'Interesting link → '];

@@ -1,7 +1,7 @@
 import { RefreshControl, ScrollView, Text, View, Pressable } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { supabase } from '../shared';
+import { supabase } from '../../shared/lib/supabase';
 
 const statusOrder = ['building', 'shortlisted', 'idea', 'paused', 'shipped'];
 

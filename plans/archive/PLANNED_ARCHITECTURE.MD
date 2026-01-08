@@ -1,5 +1,7 @@
 # Planned Architecture
 
+> Status: OLD — archived reference for the completed workspace migration.
+
 > Goal: consolidate Vault into a mono-repo style layout that cleanly separates platform-specific apps (web + iOS), shared logic, and configuration, while keeping Supabase assets and planning docs centralized.
 
 ## Target Directory Layout

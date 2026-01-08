@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { supabase } from '../../../shared/lib/supabase';
-import { useAIOperations } from '../../../shared/hooks/useAIOperations';
+import { supabase } from '../../shared/lib/supabase';
+import { useAIOperations } from '../../shared/hooks/useAIOperations';
 
 export default function NewIdeaScreen({ navigation, route }) {
   const inboxThought = route.params?.inboxThought;

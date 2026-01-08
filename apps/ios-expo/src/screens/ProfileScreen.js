@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, Text, TextInput, View, Switch, Alert } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { supabase } from '../../shared';
+import { supabase } from '../../shared/lib/supabase';
 import { useReminderPrompt } from '../hooks/useReminderPrompt';
 
 export default function ProfileScreen({ navigation }) {

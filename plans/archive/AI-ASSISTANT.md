@@ -1,5 +1,7 @@
 # Vault AI Assistant - Implementation Plan
 
+> Status: OLD — milestones completed; kept for historical context.
+
 ## Overview
 
 Replace mock AI with real AI-powered assistant for idea refinement, scoring, and chat.

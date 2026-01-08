@@ -11,9 +11,10 @@ config.watchFolders = [
   path.resolve(monorepoRoot, 'shared'),
 ];
 
-// Ensure shared folder can resolve modules from ios project's node_modules
+// Ensure shared folder can resolve modules from ios project's node_modules AND root
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
+  path.resolve(monorepoRoot, 'node_modules'),
 ];
 
 // Map modules that shared folder needs to ios project's node_modules

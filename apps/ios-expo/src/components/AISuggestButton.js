@@ -1,5 +1,5 @@
 import { Pressable, Text } from 'react-native';
-import { useAIOperations } from '../../../shared/hooks/useAIOperations';
+import { useAIOperations } from '../../shared/hooks/useAIOperations';
 
 export default function AISuggestButton({ idea, onApply }) {
   const { autofillIdea, scoreIdea, isLoading } = useAIOperations();

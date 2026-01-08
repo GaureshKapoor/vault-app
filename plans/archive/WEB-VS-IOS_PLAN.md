@@ -1,5 +1,7 @@
 # Web vs iOS Platform Strategy
 
+> Status: OLD — superseded by the Expo-first architecture plan.
+
 ## Overview
 
 Vault is deployed across multiple platforms with shared codebase where possible.

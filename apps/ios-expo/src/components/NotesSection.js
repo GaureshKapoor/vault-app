@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { supabase } from '../../../shared/lib/supabase';
+import { supabase } from '../../shared/lib/supabase';
 
 export default function NotesSection({ ideaId }) {
   const [notes, setNotes] = useState([]);

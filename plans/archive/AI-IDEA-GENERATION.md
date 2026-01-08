@@ -1,5 +1,7 @@
 # AI Idea Generation Feature - Implementation Plan
 
+> Status: OLD — archived reference for the deprecated web-only generator.
+
 ## Overview
 Add an AI-powered idea generation mode to the existing AI page. Users can generate startup/project ideas via quick generation or interactive dialogue, generate multiple ideas per session, and save with either Quick Save or Edit & Save.
 

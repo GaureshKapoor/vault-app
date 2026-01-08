@@ -44,7 +44,7 @@ vault-app/
 │   ├── functions/           # Edge functions
 │   └── migrations/          # Database schema
 │
-├── plans/                   # Feature plans
+├── plans/                   # Feature plans (see "Planning Docs" below)
 ├── .env                     # Environment variables
 ├── package.json             # Workspace root
 └── vercel.json              # Deployment root
@@ -158,6 +158,7 @@ OPENROUTER_API_KEY=your-openrouter-key
 - AI Autofill, Scoring, Chat, Idea Generator, Name Suggestion, Pitch Drafting
 - Profile editing with avatar picker
 - Idea CRUD with 6-state lifecycle
+
 - One-building-at-a-time enforcement
 - Dark/light theme
 - Responsive mobile layout
@@ -165,6 +166,16 @@ OPENROUTER_API_KEY=your-openrouter-key
 ### Stubbed
 - Payments (Stripe exists, checkout skipped)
 - Feed/community features
+
+## Planning Docs
+
+We keep roadmap notes in `plans/`. Each file begins with a `Status:` banner:
+
+- `LATEST` – canonical source of truth
+- `IN USE` – still active/in-progress, referenced regularly
+- `OLD` – historical; moved to `plans/archive/`
+
+Archive anything that’s no longer relevant by moving it (entire file) into `plans/archive/` so the root folder only contains current plans.
 
 ## Supabase Setup
 

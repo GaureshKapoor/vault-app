@@ -1,5 +1,7 @@
 # iOS Expo Build Progress
 
+> Status: IN USE — source of truth for Expo parity and outstanding polish.
+
 > **Platform Guardrails**
 
 - Expo CLI requires Node ≥20.19. We scaffolded under Node 17 (with warnings) but will use Node 22 via `nvm` per-shell when running the iOS app. Web/Capacitor remains on the existing Node version; no global change was made.
@@ -8,9 +10,15 @@
 
 - iOS shares business logic via `shared/` so hooks/types remain consistent across platforms.
 
+## Current Build Workflow (Xcode)
+- `cd apps/ios-expo && nvm use 22 && npm install` to pull Expo deps that match SDK 54.
+- `npx expo prebuild --clean --platform ios` (or `expo prebuild ios`) generates the `ios/` directory that Xcode consumes. Run this anytime native deps or app.json changes.
+- Open `apps/ios-expo/ios/Vault iOS.xcworkspace` in Xcode, fix signing, and build to simulator/device.
+- Until we wire push and native modules, keep using the Expo dev client (`npx expo start --ios`) for iteration, then fall back to Xcode once prebuild completes.
+
 ## 1. Shared Foundation
 - Added `shared/` with Supabase client, design tokens, platform helpers, and reusable hooks (`useAIOperations`, `useAIChat`, `useSupabaseSession`, `useAuthGuard`).
-- iOS screens import from shared modules; no changes to existing web code.
+- ACTION: Screens currently import via `../shared`/`../../../shared`, which overshoots the symlink. Fix paths to `../../shared` (from `src/*`) so Metro/Xcode builds can resolve modules. Also update hooks to import `supabase` from `../lib/supabase`.
 
 ## 2. Auth Flow
 - Created `AuthFlowScreen` for sign-in/up and scaffolded onboarding gate.
@@ -55,45 +63,15 @@
 ## 10. Config & Docs
 - Added Expo config (`app.config.js`) with schema, bundle identifier, and environment variable wiring for Supabase.
 - Documented how to bootstrap the iOS app (Node version, env setup, npm scripts) in `apps/ios/expo/README.md`.
+- Missing: `apps/ios-expo/README.md` still references `apps/ios/expo`; update instructions after the shared import fixes ship.
 
 ## TODOs
-- [x] Recreate full 7-step onboarding (types, goals, tools, first idea) to match the web flow exactly.
-- [x] Hook `useAIChat` directly into AIScreen so history, clear, and edge-function calls mirror the web experience.
-- [x] Wire Inbox to the final Supabase table once backend work lands, including swipe/undo parity.
-- [x] Add idea notes append-only feed + AI refinement
-- [x] Implement native modals/drawers (AI previews, share/export)
-- [x] Integrate push notifications/reminders for focus slot + stale ideas (placeholder hook)
-- [x] Build App Store assets and run Expo EAS builds once the feature set stabilizes (tracked via `plans/IOS_APP_STORE_CHECKLIST.md`).
-
-The Expo build now covers feature parity at the UI/code level, but a
-  few operational items remain before it behaves exactly like the web app
-  in production:
-
-  1. Supabase tables – The mobile Inbox references an inbox_thoughts
-  table. If that table doesn’t exist yet, the add/promote/delete calls
-  will no-op in production. We should either create it (matching the
-  schema we expect) or guard the API calls until the backend lands.
-
-  2. Expo push notifications – The placeholder useReminderPrompt just
-  alerts. To match the “Focus slot reminders” idea, we’ll need to
-  integrate expo-notifications + the Supabase edge function that sends
-  reminders, once we’re allowed to install packages.
-  
-  3. Idea notes + AI refine – The UI is in place for both, but the web
-  version also shows note authors/timestamps with shadcn cards and some
-  additional AI actions (e.g., name/pitch suggestion dialogs). We’ve
-  mirrored the structure, but polishing (e.g., modals for name/pitch)
-  could be next.
-
-  4. Expo configuration – Running the app requires Node ≥20 and the
-  relevant .env values; we’ve documented this, but we haven’t verified the
-  Expo build/Bundler on actual devices yet.
-
-  5. Screenshots/App Store metadata – The checklist file outlines this,
-  but we haven’t generated the assets.
-
-  So in terms of code, the iOS app can now render the same screens as
-  web and talk to Supabase for ideas/AI, but we still need to finalize
-  the backend table for Inbox thoughts, wire actual push notifications,
-  and run Expo/EAS builds with Node 22+ before shipping. The web client
-  remains untouched throughout. 
+- [ ] Fix all `shared` import paths so Metro/Xcode resolve the shared hooks (currently points to `../shared`/`../supabase`).
+- [ ] Verify Supabase hooks after the path fix (the hooks import `supabase` from `../supabase`, which 404s).
+- [ ] Run `npx expo prebuild --clean --platform ios` and commit/ignore generated native project as needed for Xcode builds.
+- [ ] Configure Xcode signing (bundle id `build.vault.app`) and confirm simulator build succeeds.
+- [ ] Ensure `.env` contains `EXPO_PUBLIC_SUPABASE_URL/ANON_KEY` when running via Xcode (Expo prebuild copies them at build time).
+- [ ] Create/verify `inbox_thoughts` table or guard calls behind feature flag.
+- [ ] Implement expo-notifications + reminder edge function to replace placeholder alerts.
+- [ ] Polish AI detail flows (notes authorship, pitch/name dialogs) to match web parity.
+- [ ] Capture screenshots + videos once Xcode build is stable (tracked alongside `plans/IOS_APP_STORE_CHECKLIST.md`).

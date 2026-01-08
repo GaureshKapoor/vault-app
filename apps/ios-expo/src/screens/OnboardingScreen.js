@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { supabase } from '../../../shared/lib/supabase';
+import { supabase } from '../../shared/lib/supabase';
 
 const steps = [
   { key: 'user_type', label: 'Who are you?', placeholder: 'Founder, builder, creator...' },

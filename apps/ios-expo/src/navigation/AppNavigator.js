@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Inbox, Sparkles, BarChart3, User } from 'lucide-react-native';
 import { View, Text } from 'react-native';
-import { useSupabaseSession, useAuthGuard } from '../../../shared';
+import { useSupabaseSession, useAuthGuard } from '../../shared';
 import InboxScreen from '../screens/InboxScreen';
 import HomeScreen from '../screens/HomeScreen';
 import AIScreen from '../screens/AIScreen';

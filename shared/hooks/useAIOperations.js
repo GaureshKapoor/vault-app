@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 
 export function useAIOperations() {
   const [loadingKey, setLoadingKey] = useState(null);

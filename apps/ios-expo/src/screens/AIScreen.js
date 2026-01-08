@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, View, Pressable } from 'react-native';
-import { useAIChat } from '../../../shared/hooks/useAIChat';
+import { useAIChat } from '../../shared/hooks/useAIChat';
 
 export default function AIScreen() {
   const { messages, sendMessage, clearHistory, isLoading, error } = useAIChat();

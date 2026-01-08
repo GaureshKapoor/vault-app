@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AutofillResult } from "./useAIOperations";
@@ -52,6 +52,15 @@ export function useIdeaGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Track if component is mounted to avoid state updates after unmount
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Load ideas from localStorage on mount
   useEffect(() => {
@@ -130,6 +139,9 @@ export function useIdeaGeneration() {
         generatedAt: new Date(),
       }));
 
+      // Only update state and show toast if still mounted
+      if (!isMountedRef.current) return;
+
       setIdeas(prev => [...newIdeas, ...prev]);
 
       toast({
@@ -138,6 +150,9 @@ export function useIdeaGeneration() {
       });
 
     } catch (err) {
+      // Only show error if still mounted
+      if (!isMountedRef.current) return;
+
       let message = err instanceof Error ? err.message : "Failed to generate ideas";
 
       if (message.includes("non-2xx") || message.includes("FunctionsHttpError")) {
@@ -151,7 +166,9 @@ export function useIdeaGeneration() {
         description: message,
       });
     } finally {
-      setIsGenerating(false);
+      if (isMountedRef.current) {
+        setIsGenerating(false);
+      }
     }
   }, [toast]);
 

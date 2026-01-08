@@ -4,8 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "workspaces": [
-    "apps/web",
-    "apps/ios-expo"
+    "apps/web"
   ],
   "scripts": {
     "web:dev": "npm run dev -w apps/web",

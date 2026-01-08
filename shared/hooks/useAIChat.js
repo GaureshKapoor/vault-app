@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'vault-ios-ai-history';
 const MAX_HISTORY = 50;

@@ -1,7 +1,7 @@
 import { RefreshControl, ScrollView, Text, View, ActivityIndicator } from 'react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { supabase } from '../shared';
+import { supabase } from '../../shared/lib/supabase';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 
 const statusOrder = ['building', 'shortlisted', 'idea', 'paused', 'shipped'];
