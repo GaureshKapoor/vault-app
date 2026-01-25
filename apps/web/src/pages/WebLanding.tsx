@@ -25,6 +25,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VaultLogoWithText } from "@/components/icons/VaultLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+
+// Screenshot imports for landing page showcase
+// To update screenshots: Replace files in apps/web/src/assets/screenshots/
+const screenshotModules = import.meta.glob<{ default: string }>(
+  "@/assets/screenshots/*.png",
+  { eager: true }
+);
+
+const getScreenshot = (name: string): string | undefined => {
+  const key = Object.keys(screenshotModules).find(k => k.includes(name));
+  return key ? screenshotModules[key]?.default : undefined;
+};
+
+const dashboardScreenshot = getScreenshot("dashboard");
+const aiAssistantScreenshot = getScreenshot("ai-assistant");
+const progressScreenshot = getScreenshot("progress");
+const detailOverviewScreenshot = getScreenshot("detail-overview");
+const detailAiAnalysisScreenshot = getScreenshot("detail-ai-analysis");
+const detailMvpShapeScreenshot = getScreenshot("detail-mvp-shape");
+const detailNotesScreenshot = getScreenshot("detail-notes");
 import {
   Sheet,
   SheetContent,
@@ -301,9 +321,16 @@ function AnimatedTagline() {
 }
 
 const demoViews = [
-  { id: 0, label: "Home", sublabel: "Your idea dashboard", badge: "Dashboard", icon: "home" },
-  { id: 1, label: "AI Assistant", sublabel: "Smart ideation help", badge: "AI", icon: "sparkles" },
-  { id: 2, label: "Progress View", sublabel: "Track your builds", badge: "Progress", icon: "chart" },
+  { id: 0, label: "Home", sublabel: "Your idea dashboard", badge: "Dashboard", icon: "home", screenshot: dashboardScreenshot },
+  { id: 1, label: "AI Assistant", sublabel: "Smart ideation help", badge: "AI", icon: "sparkles", screenshot: aiAssistantScreenshot },
+  { id: 2, label: "Progress View", sublabel: "Track your builds", badge: "Progress", icon: "chart", screenshot: progressScreenshot },
+];
+
+const detailViews = [
+  { label: "Overview", sublabel: "Core idea structure", screenshot: detailOverviewScreenshot },
+  { label: "AI Analysis", sublabel: "Scoring & feedback", screenshot: detailAiAnalysisScreenshot },
+  { label: "MVP Shape", sublabel: "Build roadmap", screenshot: detailMvpShapeScreenshot },
+  { label: "Notes", sublabel: "Your annotations", screenshot: detailNotesScreenshot },
 ];
 
 function IdeaBankCarousel() {
@@ -391,16 +418,25 @@ function IdeaBankCarousel() {
                 <div className={`w-full h-full rounded-2xl overflow-hidden border-2 bg-card shadow-2xl transition-colors duration-300 ${
                   activeIndex === i ? "border-primary" : "border-border"
                 }`}>
-                  {/* Placeholder content */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-                    <div className="text-center p-6">
-                      <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Sparkles className="w-7 h-7 md:w-8 md:h-8 text-primary" />
+                  {/* Screenshot or fallback placeholder */}
+                  {view.screenshot ? (
+                    <img
+                      src={view.screenshot}
+                      alt={view.label}
+                      className="absolute inset-0 w-full h-full object-cover object-top"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+                      <div className="text-center p-6">
+                        <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Sparkles className="w-7 h-7 md:w-8 md:h-8 text-primary" />
+                        </div>
+                        <div className="text-foreground font-semibold text-base md:text-lg">{view.label}</div>
+                        <div className="text-muted-foreground text-xs md:text-sm mt-1">{view.sublabel}</div>
                       </div>
-                      <div className="text-foreground font-semibold text-base md:text-lg">{view.label}</div>
-                      <div className="text-muted-foreground text-xs md:text-sm mt-1">{view.sublabel}</div>
                     </div>
-                  </div>
+                  )}
                   {/* Badge */}
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm text-foreground text-xs font-medium px-2.5 py-1 rounded-full border border-border">
                     {view.badge}
@@ -950,22 +986,27 @@ export default function Onboarding() {
                 <span className="text-xs text-primary">— Tap to explore →</span>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-3 -mx-6 px-6 snap-x snap-mandatory md:justify-center md:mx-0 md:px-0">
-                {[
-                  { label: "Overview", sublabel: "Core idea structure" },
-                  { label: "AI Analysis", sublabel: "Scoring & feedback" },
-                  { label: "MVP Shape", sublabel: "Build roadmap" },
-                  { label: "Notes", sublabel: "Your annotations" },
-                ].map((item, i) => (
+                {detailViews.map((item, i) => (
                   <div
                     key={i}
                     className="relative rounded-lg overflow-hidden border border-border bg-card w-[200px] md:w-[240px] aspect-[16/10] flex-shrink-0 hover:border-primary/50 transition-colors snap-center"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent flex items-center justify-center">
-                      <div className="text-center p-3">
-                        <div className="text-foreground font-medium text-sm">{item.label}</div>
-                        <div className="text-muted-foreground text-xs mt-0.5">{item.sublabel}</div>
+                    {/* Screenshot or fallback placeholder */}
+                    {item.screenshot ? (
+                      <img
+                        src={item.screenshot}
+                        alt={item.label}
+                        className="absolute inset-0 w-full h-full object-cover object-top"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent flex items-center justify-center">
+                        <div className="text-center p-3">
+                          <div className="text-foreground font-medium text-sm">{item.label}</div>
+                          <div className="text-muted-foreground text-xs mt-0.5">{item.sublabel}</div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                     <div className="absolute bottom-1.5 right-1.5 bg-primary/10 text-primary text-xs font-medium px-1.5 py-0.5 rounded text-[10px]">
                       Section {i + 1}
                     </div>
