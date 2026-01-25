@@ -67,49 +67,47 @@ export default function Pricing() {
 
       if (success === "true") {
         setIsProcessingPayment(true);
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            navigate("/auth");
-            return;
-          }
 
-          // Update profile with Pro subscription
-          const trialEnd = new Date();
-          trialEnd.setDate(trialEnd.getDate() + 7);
-
-          const { error } = await supabase
-            .from("profiles")
-            .update({
-              subscription_tier: "pro",
-              subscription_status: "trial",
-              trial_ends_at: trialEnd.toISOString(),
-            })
-            .eq("user_id", user.id);
-
-          if (error) throw error;
-
-          toast({
-            title: "Welcome to Pro!",
-            description: "Your 7-day trial has started.",
-          });
-
-          navigate("/onboarding/setup", { replace: true });
-        } catch (error) {
-          console.error("Error processing payment success:", error);
-          toast({
-            variant: "destructive",
-            title: "Something went wrong",
-            description: "Please contact support.",
-          });
-          setIsProcessingPayment(false);
+        // Webhook handles the DB update - just wait briefly for it to process
+        // then navigate to onboarding
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/auth");
+          return;
         }
+
+        // Poll briefly to ensure webhook has processed
+        let attempts = 0;
+        const maxAttempts = 5;
+
+        const checkSubscription = async (): Promise<boolean> => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("subscription_status")
+            .eq("user_id", user.id)
+            .single();
+
+          return profile?.subscription_status === "trial" || profile?.subscription_status === "active";
+        };
+
+        while (attempts < maxAttempts) {
+          const isSubscribed = await checkSubscription();
+          if (isSubscribed) break;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
+        }
+
+        toast({
+          title: "Welcome to Pro!",
+          description: "Your 7-day trial has started.",
+        });
+
+        navigate("/onboarding/setup", { replace: true });
       } else if (canceled === "true") {
         toast({
           title: "Payment canceled",
           description: "You can try again or choose the free plan.",
         });
-        // Clear the URL params
         navigate("/pricing", { replace: true });
       }
     };

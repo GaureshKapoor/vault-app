@@ -1,239 +1,625 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  Pressable,
+  Alert,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import {
+  Plus,
+  Sparkles,
+  Send,
+  Lightbulb,
+  PenLine,
+  Mic,
+  Link2,
+  Archive,
+  ArchiveRestore,
+  Trash2,
+  Feather,
+  CloudOff,
+  PartyPopper,
+} from 'lucide-react-native';
 import { supabase } from '../../shared/lib/supabase';
+import { colors, spacing, borderRadius } from '../../shared/theme';
 
 const STORAGE_KEY = 'vault-ios-inbox';
-const prompts = ['Customer pain: ', 'Workflow tweak: ', 'Voice memo transcription: ', 'Interesting link → '];
+
+const templates = [
+  { id: 'pain', label: 'Customer pain', Icon: Lightbulb, text: 'Customer pain: ' },
+  { id: 'workflow', label: 'Workflow idea', Icon: PenLine, text: 'Workflow tweak: ' },
+  { id: 'voice', label: 'Voice memo', Icon: Mic, text: 'Voice memo transcription: ' },
+  { id: 'link', label: 'Link drop', Icon: Link2, text: 'Interesting link → ' },
+];
+
+const hoursSince = (date) => {
+  return Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60));
+};
+
+const formatTimestamp = (date) => {
+  const diffHours = hoursSince(date);
+  if (diffHours < 1) return 'Moments ago';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const days = Math.floor(diffHours / 24);
+  if (days === 1) return 'Yesterday';
+  return `${days}d ago`;
+};
 
 export default function InboxScreen() {
   const navigation = useNavigation();
   const [thoughts, setThoughts] = useState([]);
   const [draft, setDraft] = useState('');
-  const [syncing, setSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState(null);
-  const [recentlyDeleted, setRecentlyDeleted] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
+  // Load from AsyncStorage on mount
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((value) => {
-      if (value) {
-        setThoughts(JSON.parse(value));
-      }
-    });
+    loadThoughts();
   }, []);
 
+  // Save to AsyncStorage whenever thoughts change
   useEffect(() => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(thoughts));
   }, [thoughts]);
 
-  const handleAddThought = async () => {
-    if (!draft.trim()) return;
-    const tempId = Date.now().toString();
-    const newThought = {
-      id: tempId,
-      text: draft.trim(),
-      createdAt: new Date().toISOString(),
-      promoted: false,
-    };
-    setThoughts((prev) => [newThought, ...prev]);
-    setDraft('');
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('inbox_thoughts')
-      .insert({ user_id: user.id, content: newThought.text })
-      .select()
-      .single();
-    if (!error && data) {
-      setThoughts((prev) => prev.map((thought) => (thought.id === tempId ? { ...thought, id: data.id } : thought)));
+  const loadThoughts = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setThoughts(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading thoughts:', error);
     }
   };
 
-  const handleDelete = useCallback(async (id) => {
-    setThoughts((prev) => {
-      const target = prev.find((t) => t.id === id);
-      if (target) setRecentlyDeleted(target);
-      return prev.filter((thought) => thought.id !== id);
-    });
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from('inbox_thoughts').delete().eq('user_id', user.id).eq('id', id);
-    }
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadThoughts();
+    setRefreshing(false);
   }, []);
 
-  const handlePromote = useCallback(
-    async (thought) => {
-      navigation.navigate('MainShell', {
-        screen: 'Home',
-        params: { inboxThought: thought.text },
-      });
-      setThoughts((prev) => prev.filter((item) => item.id !== thought.id));
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('inbox_thoughts')
-          .update({ promoted: true })
-          .eq('id', thought.id)
-          .eq('user_id', user.id);
-      }
-    },
-    [navigation]
+  const addThought = () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+
+    const thought = {
+      id: Date.now().toString(),
+      text: trimmed,
+      createdAt: new Date().toISOString(),
+      status: 'active',
+    };
+
+    setThoughts((prev) => [thought, ...prev]);
+    setDraft('');
+  };
+
+  const handleTemplate = (templateText) => {
+    setDraft((prev) => (prev ? `${prev}\n${templateText}` : templateText));
+  };
+
+  const handleCreateWithAI = (thought) => {
+    navigation.navigate('NewIdea', { inboxThought: thought.text });
+    setThoughts((prev) =>
+      prev.map((item) =>
+        item.id === thought.id
+          ? { ...item, status: 'promoted', promotedAt: new Date().toISOString() }
+          : item
+      )
+    );
+  };
+
+  const handleMarkPromoted = (thought) => {
+    setThoughts((prev) =>
+      prev.map((item) =>
+        item.id === thought.id
+          ? { ...item, status: 'promoted', promotedAt: new Date().toISOString() }
+          : item
+      )
+    );
+  };
+
+  const handleArchive = (thought) => {
+    setThoughts((prev) =>
+      prev.map((item) => (item.id === thought.id ? { ...item, status: 'archived' } : item))
+    );
+  };
+
+  const handleRestore = (thought) => {
+    setThoughts((prev) =>
+      prev.map((item) => (item.id === thought.id ? { ...item, status: 'active' } : item))
+    );
+  };
+
+  const handleDelete = (thought) => {
+    Alert.alert('Delete Thought', 'Are you sure you want to delete this thought?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => setThoughts((prev) => prev.filter((item) => item.id !== thought.id)),
+      },
+    ]);
+  };
+
+  // Categorize thoughts
+  const activeThoughts = useMemo(
+    () => thoughts.filter((t) => t.status === 'active' || !t.status),
+    [thoughts]
   );
 
-  const sections = useMemo(() => {
-    const now = Date.now();
-    const fresh = [];
-    const needsStructure = [];
-    thoughts.forEach((thought) => {
-      const ageHours = (now - new Date(thought.createdAt).getTime()) / 1000 / 60 / 60;
-      if (ageHours < 12) {
-        fresh.push(thought);
-      } else {
-        needsStructure.push(thought);
-      }
-    });
-    return { fresh, needsStructure };
-  }, [thoughts]);
+  const freshThoughts = useMemo(
+    () =>
+      activeThoughts
+        .filter((t) => hoursSince(t.createdAt) < 12)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    [activeThoughts]
+  );
 
-  const handleUndo = () => {
-    if (!recentlyDeleted) return;
-    setThoughts((prev) => [recentlyDeleted, ...prev]);
-    setRecentlyDeleted(null);
-  };
+  const needsStructureThoughts = useMemo(
+    () =>
+      activeThoughts
+        .filter((t) => hoursSince(t.createdAt) >= 12)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    [activeThoughts]
+  );
 
-  const syncRemoteInbox = useCallback(async () => {
-    setSyncing(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('inbox_thoughts')
-        .select('id, content, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      if (!error && data) {
-        const mapped = data.map((row) => ({ id: row.id, text: row.content, createdAt: row.created_at, promoted: false }));
-        setThoughts(mapped);
-        setLastSync(new Date().toISOString());
-      }
-    } finally {
-      setSyncing(false);
-    }
-  }, []);
+  const promotedThoughts = useMemo(
+    () =>
+      thoughts
+        .filter((t) => t.status === 'promoted')
+        .sort((a, b) => new Date(b.promotedAt || b.createdAt) - new Date(a.promotedAt || a.createdAt)),
+    [thoughts]
+  );
 
-  useEffect(() => {
-    syncRemoteInbox();
-  }, [syncRemoteInbox]);
+  const archivedThoughts = useMemo(
+    () =>
+      thoughts
+        .filter((t) => t.status === 'archived')
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    [thoughts]
+  );
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: '#09090b' }}
-      contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 48 }}
-    >
-      <View>
-        <Text style={{ fontSize: 24, fontWeight: '700', color: '#fff' }}>Inbox</Text>
-        <Text style={{ color: '#9ca3af', marginTop: 4 }}>Capture raw sparks & brain dumps.</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
-          <Pressable
-            onPress={syncRemoteInbox}
-            style={({ pressed }) => ({
-              borderRadius: 999,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderWidth: 1,
-              borderColor: '#27272a',
-              backgroundColor: pressed ? '#13131a' : '#111113',
-            })}
-          >
-            <Text style={{ color: '#a78bfa', fontWeight: '600' }}>{syncing ? 'Syncing…' : 'Sync now'}</Text>
-          </Pressable>
-          {lastSync && <Text style={{ color: '#71717a', fontSize: 12 }}>Last sync {new Date(lastSync).toLocaleTimeString()}</Text>}
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+      {/* Header */}
+      <View
+        style={{
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.md,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground }}>Inbox</Text>
+        <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 2 }}>
+          Dump sparks quickly, then decide whether to nurture, promote, or shelve them.
+        </Text>
       </View>
 
-      <View style={{ borderRadius: 20, backgroundColor: '#111113', borderWidth: 1, borderColor: '#27272a', padding: 16 }}>
-        <Text style={{ color: '#9ca3af', marginBottom: 12 }}>Templates</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {prompts.map((prompt) => (
-            <Pressable
-              key={prompt}
-              onPress={() => setDraft((prev) => `${prev ? prev + '\n' : ''}${prompt}`)}
-              style={({ pressed }) => ({
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                borderRadius: 999,
-                backgroundColor: pressed ? '#1f1f28' : '#16161a',
-              })}
-            >
-              <Text style={{ color: '#e4e4e7', fontSize: 12 }}>{prompt}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#27272a', padding: 16, gap: 12 }}>
-        <Text style={{ color: '#fff', fontWeight: '600' }}>New thought</Text>
-        <TextInput
-          placeholder="Brain dump, question, half-formed pitch…"
-          placeholderTextColor="#71717a"
-          multiline
-          value={draft}
-          onChangeText={setDraft}
-          style={{ color: '#fff', borderWidth: 1, borderColor: '#27272a', borderRadius: 12, padding: 12, minHeight: 80 }}
-        />
+      <ScrollView
+        contentContainerStyle={{ padding: spacing.md, gap: spacing.lg, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+      >
+        {/* Create New Idea Card */}
         <Pressable
-          onPress={handleAddThought}
+          onPress={() => navigation.navigate('NewIdea', { fromInbox: true })}
           style={({ pressed }) => ({
-            backgroundColor: pressed ? '#5b21b6' : '#7c3aed',
-            borderRadius: 12,
-            paddingVertical: 12,
+            borderRadius: borderRadius.xl,
+            borderWidth: 2,
+            borderStyle: 'dashed',
+            borderColor: pressed ? colors.primary : colors.border,
+            backgroundColor: pressed ? `${colors.primary}10` : `${colors.card}50`,
+            padding: spacing.lg,
             alignItems: 'center',
           })}
         >
-          <Text style={{ color: '#fff', fontWeight: '600' }}>Save thought</Text>
+          <View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              backgroundColor: colors.primarySoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: spacing.md,
+            }}
+          >
+            <Plus size={32} color={colors.primary} />
+          </View>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: colors.foreground }}>
+            Ideas are the future
+          </Text>
+          <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 4 }}>
+            Tap to create a new idea
+          </Text>
         </Pressable>
-      </View>
 
-      {[{ label: 'Just dropped', data: sections.fresh }, { label: 'Needs structure', data: sections.needsStructure }].map(
-        (section) => (
-          <View key={section.label} style={{ borderRadius: 18, borderWidth: 1, borderColor: '#1f1f23', padding: 16 }}>
-            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>{section.label}</Text>
-            <Text style={{ color: '#9ca3af', marginTop: 6 }}>
-              {section.data.length ? `${section.data.length} thoughts` : 'Nothing here yet'}
-            </Text>
-            <View style={{ marginTop: 12, gap: 12 }}>
-              {section.data.map((thought) => (
-                <View key={thought.id} style={{ borderRadius: 14, borderWidth: 1, borderColor: '#27272a', padding: 12 }}>
-                  <Text style={{ color: '#e4e4e7' }}>{thought.text}</Text>
-                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-                    <Pressable
-                      onPress={() => handlePromote(thought)}
-                      style={({ pressed }) => ({ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, backgroundColor: pressed ? '#312e81' : '#1e1b4b' })}
-                    >
-                      <Text style={{ color: '#c4b5fd', fontWeight: '600' }}>Promote</Text>
-                    </Pressable>
-                    <Pressable onPress={() => handleDelete(thought.id)} style={{ paddingVertical: 8, paddingHorizontal: 12 }}>
-                      <Text style={{ color: '#f87171', fontWeight: '600' }}>Delete</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              ))}
+        {/* Mind Dump Section */}
+        <View
+          style={{
+            backgroundColor: colors.card,
+            borderRadius: borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: spacing.md,
+            gap: spacing.md,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Sparkles size={20} color={colors.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 17, fontWeight: '600', color: colors.foreground }}>
+                Mind dump HQ
+              </Text>
+              <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
+                Capture anything swirling in your head.
+              </Text>
             </View>
           </View>
-        )
-      )}
 
-      {recentlyDeleted && (
-        <View style={{ borderRadius: 14, borderWidth: 1, borderColor: '#f87171', padding: 12, backgroundColor: '#2a1414' }}>
-          <Text style={{ color: '#fca5a5' }}>Thought deleted.</Text>
-          <Pressable onPress={handleUndo} style={{ marginTop: 8 }}>
-            <Text style={{ color: '#fda4af', fontWeight: '600' }}>Undo</Text>
-          </Pressable>
+          {/* Input */}
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            placeholder="Brain dump, question, half-formed pitch…"
+            placeholderTextColor={colors.mutedForeground}
+            multiline
+            style={{
+              backgroundColor: colors.background,
+              borderRadius: borderRadius.md,
+              borderWidth: 1,
+              borderColor: colors.border,
+              padding: spacing.md,
+              color: colors.foreground,
+              fontSize: 15,
+              minHeight: 100,
+              textAlignVertical: 'top',
+            }}
+          />
+
+          {/* Templates */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {templates.map((template) => (
+              <Pressable
+                key={template.id}
+                onPress={() => handleTemplate(template.text)}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: borderRadius.sm,
+                  backgroundColor: pressed ? colors.secondary : colors.muted,
+                })}
+              >
+                <template.Icon size={14} color={colors.foreground} />
+                <Text style={{ fontSize: 13, color: colors.foreground }}>{template.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Footer */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <CloudOff size={12} color={colors.mutedForeground} />
+              <Text style={{ fontSize: 11, color: colors.mutedForeground }}>Stored locally</Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <Pressable
+                onPress={() => setDraft('')}
+                style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+              >
+                <Text style={{ color: colors.mutedForeground, fontWeight: '500' }}>Clear</Text>
+              </Pressable>
+              <Pressable
+                onPress={addThought}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: borderRadius.sm,
+                  backgroundColor: pressed ? colors.primaryStrong : colors.primary,
+                })}
+              >
+                <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>Log thought</Text>
+                <Send size={16} color={colors.primaryForeground} />
+              </Pressable>
+            </View>
+          </View>
+        </View>
+
+        {/* Stats Cards */}
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <View
+            style={{
+              flex: 1,
+              borderRadius: borderRadius.xl,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: `${colors.muted}30`,
+              padding: spacing.md,
+            }}
+          >
+            <Text style={{ fontSize: 11, color: colors.mutedForeground, textTransform: 'uppercase' }}>
+              Fresh drops
+            </Text>
+            <Text style={{ fontSize: 24, fontWeight: '600', color: colors.foreground, marginTop: 4 }}>
+              {freshThoughts.length}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 4 }}>
+              Touch within 24h
+            </Text>
+          </View>
+          <View
+            style={{
+              flex: 1,
+              borderRadius: borderRadius.xl,
+              borderWidth: 1,
+              borderColor: colors.border,
+              padding: spacing.md,
+            }}
+          >
+            <Text style={{ fontSize: 11, color: colors.mutedForeground, textTransform: 'uppercase' }}>
+              Needs structure
+            </Text>
+            <Text style={{ fontSize: 24, fontWeight: '600', color: colors.foreground, marginTop: 4 }}>
+              {needsStructureThoughts.length}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 4 }}>
+              Give these AI pass
+            </Text>
+          </View>
+          <View
+            style={{
+              flex: 1,
+              borderRadius: borderRadius.xl,
+              borderWidth: 1,
+              borderColor: colors.border,
+              padding: spacing.md,
+            }}
+          >
+            <Text style={{ fontSize: 11, color: colors.mutedForeground, textTransform: 'uppercase' }}>
+              Promoted
+            </Text>
+            <Text style={{ fontSize: 24, fontWeight: '600', color: colors.foreground, marginTop: 4 }}>
+              {promotedThoughts.length}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 4 }}>
+              Wins to revisit
+            </Text>
+          </View>
+        </View>
+
+        {/* Thought Sections */}
+        <ThoughtSection
+          title="Just dropped"
+          description="Stuff you captured recently. Promote while it's fresh."
+          emptyLabel="Nothing new yet. Capture a thought to see it here."
+          thoughts={freshThoughts}
+          variant="default"
+          onCreateWithAI={handleCreateWithAI}
+          onMarkPromoted={handleMarkPromoted}
+          onArchive={handleArchive}
+        />
+
+        <ThoughtSection
+          title="Needs structure"
+          description="Older notes that deserve shaping before they go stale."
+          emptyLabel="All caught up."
+          thoughts={needsStructureThoughts}
+          variant="default"
+          onCreateWithAI={handleCreateWithAI}
+          onMarkPromoted={handleMarkPromoted}
+          onArchive={handleArchive}
+        />
+
+        <ThoughtSection
+          title="Already promoted"
+          description="Ideas that graduated into the pipeline."
+          emptyLabel="No conversions yet. Keep promoting promising sparks."
+          thoughts={promotedThoughts}
+          variant="promoted"
+          onArchive={handleArchive}
+        />
+
+        {archivedThoughts.length > 0 && (
+          <ThoughtSection
+            title="Shelf / Archive"
+            description="Quiet storage for brain dumps you don't need right now."
+            emptyLabel=""
+            thoughts={archivedThoughts}
+            variant="archived"
+            onRestore={handleRestore}
+            onDelete={handleDelete}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function ThoughtSection({
+  title,
+  description,
+  emptyLabel,
+  thoughts,
+  variant = 'default',
+  onCreateWithAI,
+  onMarkPromoted,
+  onArchive,
+  onRestore,
+  onDelete,
+}) {
+  return (
+    <View
+      style={{
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.xl,
+        borderWidth: 1,
+        borderColor: colors.border,
+        padding: spacing.md,
+      }}
+    >
+      {/* Header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.md }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: colors.foreground }}>{title}</Text>
+          <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 2 }}>{description}</Text>
+        </View>
+        <Text style={{ fontSize: 13, color: colors.mutedForeground }}>{thoughts.length}</Text>
+      </View>
+
+      {/* Empty State */}
+      {thoughts.length === 0 && emptyLabel && (
+        <View
+          style={{
+            borderWidth: 1,
+            borderStyle: 'dashed',
+            borderColor: colors.border,
+            borderRadius: borderRadius.lg,
+            padding: spacing.md,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ fontSize: 13, color: colors.mutedForeground, textAlign: 'center' }}>
+            {emptyLabel}
+          </Text>
         </View>
       )}
-    </ScrollView>
+
+      {/* Thoughts List */}
+      <View style={{ gap: 12 }}>
+        {thoughts.map((thought) => (
+          <View
+            key={thought.id}
+            style={{
+              borderRadius: borderRadius.xl,
+              borderWidth: 1,
+              borderColor: colors.border,
+              padding: spacing.md,
+            }}
+          >
+            <Text style={{ fontSize: 15, color: colors.foreground, lineHeight: 22 }}>{thought.text}</Text>
+
+            {/* Timestamp */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+              <Feather size={12} color={colors.mutedForeground} />
+              <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                {formatTimestamp(thought.createdAt)}
+              </Text>
+              {thought.status === 'promoted' && thought.promotedAt && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 8 }}>
+                  <PartyPopper size={12} color={colors.primary} />
+                  <Text style={{ fontSize: 11, color: colors.primary }}>
+                    Promoted {formatTimestamp(thought.promotedAt)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Actions */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+              {variant === 'default' && (
+                <>
+                  {onCreateWithAI && (
+                    <Pressable
+                      onPress={() => onCreateWithAI(thought)}
+                      style={({ pressed }) => ({
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        borderRadius: borderRadius.sm,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        backgroundColor: pressed ? colors.card : 'transparent',
+                      })}
+                    >
+                      <Sparkles size={14} color={colors.primary} />
+                      <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: '500' }}>
+                        Draft with AI
+                      </Text>
+                    </Pressable>
+                  )}
+                  {onMarkPromoted && (
+                    <Pressable
+                      onPress={() => onMarkPromoted(thought)}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12 }}
+                    >
+                      <Plus size={14} color={colors.mutedForeground} />
+                      <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Mark promoted</Text>
+                    </Pressable>
+                  )}
+                  {onArchive && (
+                    <Pressable
+                      onPress={() => onArchive(thought)}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12 }}
+                    >
+                      <Archive size={14} color={colors.mutedForeground} />
+                      <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Archive</Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+
+              {variant === 'promoted' && onArchive && (
+                <Pressable
+                  onPress={() => onArchive(thought)}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12 }}
+                >
+                  <Archive size={14} color={colors.mutedForeground} />
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Move to shelf</Text>
+                </Pressable>
+              )}
+
+              {variant === 'archived' && (
+                <>
+                  {onRestore && (
+                    <Pressable
+                      onPress={() => onRestore(thought)}
+                      style={({ pressed }) => ({
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        borderRadius: borderRadius.sm,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        backgroundColor: pressed ? colors.card : 'transparent',
+                      })}
+                    >
+                      <ArchiveRestore size={14} color={colors.foreground} />
+                      <Text style={{ fontSize: 13, color: colors.foreground }}>Restore</Text>
+                    </Pressable>
+                  )}
+                  {onDelete && (
+                    <Pressable
+                      onPress={() => onDelete(thought)}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12 }}
+                    >
+                      <Trash2 size={14} color={colors.error} />
+                      <Text style={{ fontSize: 13, color: colors.error }}>Delete</Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }

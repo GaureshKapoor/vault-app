@@ -5,6 +5,8 @@ export function useAuthGuard() {
   const [state, setState] = useState({
     loading: true,
     allowed: false,
+    needsPricing: false,
+    needsOnboarding: false,
   });
 
   useEffect(() => {
@@ -12,7 +14,7 @@ export function useAuthGuard() {
     const checkProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        mounted && setState({ loading: false, allowed: false });
+        mounted && setState({ loading: false, allowed: false, needsPricing: false, needsOnboarding: false });
         return;
       }
       const { data: profile } = await supabase
@@ -20,9 +22,16 @@ export function useAuthGuard() {
         .select('subscription_status,onboarding_completed_at')
         .eq('user_id', user.id)
         .single();
+
       const hasSubscription = profile?.subscription_status && profile.subscription_status !== 'none';
       const hasCompletedOnboarding = !!profile?.onboarding_completed_at;
-      mounted && setState({ loading: false, allowed: hasSubscription && hasCompletedOnboarding });
+
+      mounted && setState({
+        loading: false,
+        allowed: hasSubscription && hasCompletedOnboarding,
+        needsPricing: !hasSubscription,
+        needsOnboarding: hasSubscription && !hasCompletedOnboarding,
+      });
     };
     checkProfile();
     const { data: listener } = supabase.auth.onAuthStateChange(() => {

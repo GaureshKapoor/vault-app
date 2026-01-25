@@ -2,7 +2,7 @@ require('dotenv').config({ path: '../../.env' });
 
 module.exports = {
   expo: {
-    name: 'Vault iOS',
+    name: 'Vault',
     slug: 'vault-ios',
     version: '1.0.0',
     orientation: 'portrait',

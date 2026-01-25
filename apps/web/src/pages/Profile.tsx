@@ -114,6 +114,7 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [profile, setProfile] = useState<ProfileData>({
     display_name: null,
     email: null,
@@ -402,6 +403,42 @@ export default function Profile() {
         ? prev.goals.filter((g) => g !== goalId)
         : [...prev.goals, goalId],
     }));
+  };
+
+  const handleSwitchToFree = async () => {
+    setIsCancelling(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No active session");
+
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { immediate: true },
+      });
+
+      if (error) throw error;
+
+      // Update local state
+      setProfile((prev) => ({
+        ...prev,
+        subscription_tier: "free",
+        subscription_status: "active",
+        trial_ends_at: null,
+      }));
+
+      toast({
+        title: "Switched to Free",
+        description: "You're now on the free plan.",
+      });
+    } catch (error) {
+      console.error("Error switching to free:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to switch plan",
+        description: "Please try again or contact support.",
+      });
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   const getAvatarEmoji = (avatarId: string | null) => {
@@ -737,18 +774,53 @@ export default function Profile() {
                 <p className="text-xs text-muted-foreground">
                   {profile.subscription_status === "trial" && profile.trial_ends_at
                     ? `Trial ends ${new Date(profile.trial_ends_at).toLocaleDateString()}`
-                    : profile.subscription_status === "active"
+                    : profile.subscription_status === "active" && profile.subscription_tier === "pro"
                     ? "Active subscription"
                     : "Free tier"}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/pricing")}
-              >
-                {profile.subscription_tier === "pro" ? "Manage" : "Upgrade"}
-              </Button>
+              {profile.subscription_tier === "free" ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate("/pricing")}
+                >
+                  Upgrade
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground"
+                        disabled={isCancelling}
+                      >
+                        {isCancelling ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Switch to Free"
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Switch to Free plan?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          You'll lose access to Pro features like unlimited ideas, advanced AI refinement, scoring, and exports. You can upgrade again anytime.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Pro</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSwitchToFree}>
+                          Switch to Free
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </div>
           </div>
         </motion.section>
