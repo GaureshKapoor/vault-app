@@ -243,7 +243,44 @@ export default function Pricing() {
 
           {/* Plan Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {/* Free Plan */}
+            {/* Pro Plan - First/Left */}
+            <button
+              onClick={() => setSelectedPlan("pro")}
+              className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                selectedPlan === "pro"
+                  ? "border-primary bg-accent/50"
+                  : "border-border hover:border-primary/30 bg-card"
+              }`}
+            >
+              {/* Trial Badge */}
+              <div className="absolute -top-2.5 left-3 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" />
+                7-day trial
+              </div>
+
+              <div className="flex items-center justify-between mb-2 mt-1">
+                <h2 className="text-base font-bold text-foreground">Pro</h2>
+                <div
+                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    selectedPlan === "pro"
+                      ? "border-primary bg-primary"
+                      : "border-muted-foreground"
+                  }`}
+                >
+                  {selectedPlan === "pro" && (
+                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                  )}
+                </div>
+              </div>
+              <p className="text-xl font-bold text-foreground mb-1">
+                $9<span className="text-xs font-normal text-muted-foreground">/mo</span>
+              </p>
+              <p className="text-muted-foreground text-xs">
+                For serious builders
+              </p>
+            </button>
+
+            {/* Free Plan - Second/Right */}
             <button
               onClick={() => setSelectedPlan("free")}
               className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-left ${
@@ -273,51 +310,14 @@ export default function Pricing() {
                 For casual explorers
               </p>
             </button>
-
-            {/* Pro Plan */}
-            <button
-              onClick={() => setSelectedPlan("pro")}
-              className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                selectedPlan === "pro"
-                  ? "border-primary bg-accent/50"
-                  : "border-border hover:border-primary/30 bg-card"
-              }`}
-            >
-              {/* Trial Badge */}
-              <div className="absolute -top-2.5 left-3 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5" />
-                7-day trial
-              </div>
-              
-              <div className="flex items-center justify-between mb-2 mt-1">
-                <h2 className="text-base font-bold text-foreground">Pro</h2>
-                <div
-                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    selectedPlan === "pro"
-                      ? "border-primary bg-primary"
-                      : "border-muted-foreground"
-                  }`}
-                >
-                  {selectedPlan === "pro" && (
-                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                  )}
-                </div>
-              </div>
-              <p className="text-xl font-bold text-foreground mb-1">
-                $9<span className="text-xs font-normal text-muted-foreground">/mo</span>
-              </p>
-              <p className="text-muted-foreground text-xs">
-                For serious builders
-              </p>
-            </button>
           </div>
 
           {/* Feature Comparison */}
           <div className="bg-card rounded-xl border border-border overflow-hidden mb-6">
             <div className="grid grid-cols-3 gap-2 px-3 py-2 bg-muted/50 border-b border-border">
               <div className="text-xs font-semibold text-foreground">Feature</div>
-              <div className="text-xs font-semibold text-center text-foreground">Free</div>
               <div className="text-xs font-semibold text-center text-foreground">Pro</div>
+              <div className="text-xs font-semibold text-center text-foreground">Free</div>
             </div>
             {features.map((feature, index) => (
               <div
@@ -328,17 +328,6 @@ export default function Pricing() {
               >
                 <div className="text-xs text-foreground">{feature.name}</div>
                 <div className="text-xs text-center">
-                  {typeof feature.free === "boolean" ? (
-                    feature.free ? (
-                      <Check className="w-3.5 h-3.5 text-green-500 mx-auto" />
-                    ) : (
-                      <X className="w-3.5 h-3.5 text-muted-foreground mx-auto" />
-                    )
-                  ) : (
-                    <span className="text-muted-foreground">{feature.free}</span>
-                  )}
-                </div>
-                <div className="text-xs text-center">
                   {typeof feature.pro === "boolean" ? (
                     feature.pro ? (
                       <Check className="w-3.5 h-3.5 text-green-500 mx-auto" />
@@ -347,6 +336,17 @@ export default function Pricing() {
                     )
                   ) : (
                     <span className="text-primary font-medium">{feature.pro}</span>
+                  )}
+                </div>
+                <div className="text-xs text-center">
+                  {typeof feature.free === "boolean" ? (
+                    feature.free ? (
+                      <Check className="w-3.5 h-3.5 text-green-500 mx-auto" />
+                    ) : (
+                      <X className="w-3.5 h-3.5 text-muted-foreground mx-auto" />
+                    )
+                  ) : (
+                    <span className="text-muted-foreground">{feature.free}</span>
                   )}
                 </div>
               </div>
