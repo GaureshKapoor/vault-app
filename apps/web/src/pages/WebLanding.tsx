@@ -470,39 +470,148 @@ function IdeaBankCarousel() {
   );
 }
 
-function PricingToggle({ onPlanChange }: { onPlanChange: (plan: 'free' | 'pro') => void }) {
-  const [activePlan, setActivePlan] = useState<'free' | 'pro'>('free');
+function PricingSection({ navigate }: { navigate: (path: string) => void }) {
+  const [activePlan, setActivePlan] = useState<'free' | 'pro'>('pro');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Detect which card is visible when scrolling
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const freeCard = document.getElementById('pricing-free');
+      const proCard = document.getElementById('pricing-pro');
+      if (!freeCard || !proCard) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const containerCenter = containerRect.left + containerRect.width / 2;
+
+      const freeRect = freeCard.getBoundingClientRect();
+      const proRect = proCard.getBoundingClientRect();
+
+      const freeCenter = freeRect.left + freeRect.width / 2;
+      const proCenter = proRect.left + proRect.width / 2;
+
+      const distToFree = Math.abs(containerCenter - freeCenter);
+      const distToPro = Math.abs(containerCenter - proCenter);
+
+      setActivePlan(distToFree < distToPro ? 'free' : 'pro');
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handlePlanChange = (plan: 'free' | 'pro') => {
     setActivePlan(plan);
-    onPlanChange(plan);
+    const card = document.getElementById(`pricing-${plan}`);
+    card?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   };
 
   return (
-    <div className="md:hidden flex justify-center mb-4">
-      <div className="inline-flex bg-muted rounded-full p-1">
-        <button
-          onClick={() => handlePlanChange('free')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
-            activePlan === 'free'
-              ? 'text-foreground bg-card shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Free
-        </button>
-        <button
-          onClick={() => handlePlanChange('pro')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
-            activePlan === 'pro'
-              ? 'text-foreground bg-card shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Pro
-        </button>
+    <>
+      {/* Mobile Toggle */}
+      <div className="md:hidden flex justify-center mb-4">
+        <div className="inline-flex bg-muted rounded-full p-1">
+          <button
+            onClick={() => handlePlanChange('pro')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
+              activePlan === 'pro'
+                ? 'text-foreground bg-card shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Pro
+          </button>
+          <button
+            onClick={() => handlePlanChange('free')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
+              activePlan === 'free'
+                ? 'text-foreground bg-card shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Free
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Cards - horizontal scroll on mobile, Pro first */}
+      <div
+        ref={scrollContainerRef}
+        className="flex md:grid md:grid-cols-2 gap-4 max-w-3xl mx-auto overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 -mx-6 px-6 md:mx-auto md:px-0 pt-4"
+      >
+        {/* Pro Plan - First/Left */}
+        <motion.div
+          id="pricing-pro"
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", duration: 0.4, ease: "easeOut" }}
+          viewport={{ once: true }}
+          className="p-5 pt-6 rounded-xl bg-primary text-primary-foreground border border-primary relative flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col will-change-transform"
+        >
+          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+            <span className="bg-foreground text-background text-xs font-bold px-2.5 py-0.5 rounded-full">
+              POPULAR
+            </span>
+          </div>
+          <div className="mb-5">
+            <h3 className="text-lg font-bold mb-1">Pro</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold">$9</span>
+              <span className="text-primary-foreground/70 text-sm">/month</span>
+            </div>
+            <p className="text-primary-foreground/70 mt-1 text-xs">
+              For serious builders
+            </p>
+          </div>
+          <ul className="space-y-2 mb-5 flex-1">
+            {["Unlimited ideas", "Advanced AI refinement", "Scoring & insights", "Export ideas", "Priority support"].map((feature) => (
+              <li key={feature} className="flex items-center gap-2 text-xs text-primary-foreground/90">
+                <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <Button variant="secondary" size="sm" className="w-full mt-auto bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => navigate("/auth?mode=signup")}>
+            Start Pro Trial
+          </Button>
+        </motion.div>
+
+        {/* Free Plan - Second/Right */}
+        <motion.div
+          id="pricing-free"
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", duration: 0.4, delay: 0.05, ease: "easeOut" }}
+          viewport={{ once: true }}
+          className="p-5 rounded-xl bg-card border border-border flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col will-change-transform"
+        >
+          <div className="mb-5">
+            <h3 className="text-lg font-bold text-foreground mb-1">Free</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-foreground">$0</span>
+              <span className="text-muted-foreground text-sm">/month</span>
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Perfect for getting started
+            </p>
+          </div>
+          <ul className="space-y-2 mb-5 flex-1">
+            {["Up to 10 ideas", "Basic AI refinement", "Basic templates"].map((feature) => (
+              <li key={feature} className="flex items-center gap-2 text-xs text-muted-foreground">
+                <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <Button variant="outline" size="sm" className="w-full mt-auto" onClick={() => navigate("/auth?mode=signup")}>
+            Get Started
+          </Button>
+        </motion.div>
+      </div>
+    </>
   );
 }
 
@@ -1269,83 +1378,7 @@ export default function Onboarding() {
               </p>
             </div>
 
-            {/* Mobile Toggle */}
-            <PricingToggle onPlanChange={(plan) => {
-              const card = document.getElementById(`pricing-${plan}`);
-              card?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-            }} />
-
-            {/* Cards - horizontal scroll on mobile */}
-            <div className="flex md:grid md:grid-cols-2 gap-4 max-w-3xl mx-auto overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 -mx-6 px-6 md:mx-auto md:px-0 pt-4">
-              {/* Free Plan */}
-              <motion.div
-                id="pricing-free"
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ type: "tween", duration: 0.4, ease: "easeOut" }}
-                viewport={{ once: true }}
-                className="p-5 rounded-xl bg-card border border-border flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col will-change-transform"
-              >
-                <div className="mb-5">
-                  <h3 className="text-lg font-bold text-foreground mb-1">Free</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-foreground">$0</span>
-                    <span className="text-muted-foreground text-sm">/month</span>
-                  </div>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Perfect for getting started
-                  </p>
-                </div>
-                <ul className="space-y-2 mb-5 flex-1">
-                  {["Up to 10 ideas", "Basic AI refinement", "Basic templates"].map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button variant="outline" size="sm" className="w-full mt-auto" onClick={() => navigate("/auth?mode=signup")}>
-                  Get Started
-                </Button>
-              </motion.div>
-
-              {/* Pro Plan */}
-              <motion.div
-                id="pricing-pro"
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ type: "tween", duration: 0.4, delay: 0.05, ease: "easeOut" }}
-                viewport={{ once: true }}
-                className="p-5 pt-6 rounded-xl bg-primary text-primary-foreground border border-primary relative flex-shrink-0 w-[calc(100vw-3rem)] max-w-[320px] md:w-auto md:max-w-none snap-center flex flex-col will-change-transform"
-              >
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                  <span className="bg-foreground text-background text-xs font-bold px-2.5 py-0.5 rounded-full">
-                    POPULAR
-                  </span>
-                </div>
-                <div className="mb-5">
-                  <h3 className="text-lg font-bold mb-1">Pro</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold">$9</span>
-                    <span className="text-primary-foreground/70 text-sm">/month</span>
-                  </div>
-                  <p className="text-primary-foreground/70 mt-1 text-xs">
-                    For serious builders
-                  </p>
-                </div>
-                <ul className="space-y-2 mb-5 flex-1">
-                  {["Unlimited ideas", "Advanced AI refinement", "Scoring & insights", "Export ideas", "Priority support"].map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-xs text-primary-foreground/90">
-                      <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button variant="secondary" size="sm" className="w-full mt-auto bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => navigate("/auth?mode=signup")}>
-                  Start Pro Trial
-                </Button>
-              </motion.div>
-            </div>
+            <PricingSection navigate={navigate} />
           </div>
         </AnimatedSection>
       </section>
