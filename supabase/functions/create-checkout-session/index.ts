@@ -37,7 +37,8 @@ serve(async (req) => {
       );
     }
 
-    const userId = user.id; // Derived from JWT, not client
+    const userId = user.id;
+    const userEmail = user.email;
 
     const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
     if (!STRIPE_SECRET_KEY) {
@@ -63,7 +64,52 @@ serve(async (req) => {
 
     console.log("Creating checkout session for user:", userId);
 
+    // Check if user already has a Stripe customer ID
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("user_id", userId)
+      .single();
+
+    let customerId = profile?.stripe_customer_id;
+
+    // Create or retrieve Stripe customer
+    if (!customerId) {
+      // Check if customer exists in Stripe by email
+      const existingCustomers = await stripe.customers.list({
+        email: userEmail,
+        limit: 1,
+      });
+
+      if (existingCustomers.data.length > 0) {
+        customerId = existingCustomers.data[0].id;
+      } else {
+        // Create new customer
+        const customer = await stripe.customers.create({
+          email: userEmail,
+          metadata: {
+            user_id: userId,
+          },
+        });
+        customerId = customer.id;
+      }
+
+      // Store customer ID in profile (use service role for this)
+      const supabaseService = createClient(
+        supabaseUrl,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      await supabaseService
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("user_id", userId);
+
+      console.log("Created/linked Stripe customer:", customerId);
+    }
+
+    // Create checkout session with 7-day trial
     const session = await stripe.checkout.sessions.create({
+      customer: customerId,
       payment_method_types: ["card"],
       line_items: [
         {
@@ -72,12 +118,17 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      subscription_data: {
+        trial_period_days: 7,
+        metadata: {
+          user_id: userId,
+        },
+      },
       success_url: successUrl || `${req.headers.get("origin")}/pricing?success=true`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/pricing?canceled=true`,
       metadata: {
         user_id: userId,
       },
-      // Allow promotion codes for testing
       allow_promotion_codes: true,
     });
 

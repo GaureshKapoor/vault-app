@@ -769,14 +769,17 @@ export default function Profile() {
               </div>
               <div className="flex-1">
                 <span className="font-medium text-foreground capitalize">
-                  {profile.subscription_tier || "Free"} Plan
+                  {profile.subscription_tier === "pro" ? "Pro" : "Free"} Plan
                 </span>
                 <p className="text-xs text-muted-foreground">
-                  {profile.subscription_status === "trial" && profile.trial_ends_at
-                    ? `Trial ends ${new Date(profile.trial_ends_at).toLocaleDateString()}`
-                    : profile.subscription_status === "active" && profile.subscription_tier === "pro"
+                  {profile.subscription_tier === "pro" && profile.subscription_status === "trial" && profile.trial_ends_at
+                    ? (() => {
+                        const daysLeft = Math.ceil((new Date(profile.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                        return daysLeft > 0 ? `Free trial · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : "Trial expired";
+                      })()
+                    : profile.subscription_tier === "pro" && profile.subscription_status === "active"
                     ? "Active subscription"
-                    : "Free tier"}
+                    : "Unlimited ideas available with Pro"}
                 </p>
               </div>
               {profile.subscription_tier === "free" ? (
