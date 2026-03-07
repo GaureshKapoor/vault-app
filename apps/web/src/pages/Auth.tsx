@@ -592,8 +592,8 @@ export default function Auth() {
               </button>
             </p>
 
-            {/* Dev Tools - Temporarily enabled outside dev for MVP testing */}
-            {/* {import.meta.env.DEV && ( */}
+            {/* Dev Tools - Only visible in local dev */}
+            {import.meta.env.DEV && (
               <div className="mt-8 p-4 border border-dashed border-muted-foreground/30 rounded-lg bg-muted/30">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
                   Dev Tools
@@ -618,7 +618,7 @@ export default function Auth() {
                   Works with Google login or email/password
                 </p>
               </div>
-            {/* )} */}
+            )}
             </>
             )}
           </div>

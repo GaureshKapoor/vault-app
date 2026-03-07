@@ -12,7 +12,6 @@ import {
   Lightbulb,
   Zap,
   CheckCircle,
-  Play,
   ChevronDown,
   Lock,
   Globe,
@@ -26,25 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { VaultLogoWithText } from "@/components/icons/VaultLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-// Screenshot imports for landing page showcase
-// To update screenshots: Replace files in apps/web/src/assets/screenshots/
-const screenshotModules = import.meta.glob<{ default: string }>(
-  "@/assets/screenshots/*.png",
-  { eager: true }
-);
-
-const getScreenshot = (name: string): string | undefined => {
-  const key = Object.keys(screenshotModules).find(k => k.includes(name));
-  return key ? screenshotModules[key]?.default : undefined;
-};
-
-const dashboardScreenshot = getScreenshot("dashboard");
-const aiAssistantScreenshot = getScreenshot("ai-assistant");
-const progressScreenshot = getScreenshot("progress");
-const detailOverviewScreenshot = getScreenshot("detail-overview");
-const detailAiAnalysisScreenshot = getScreenshot("detail-ai-analysis");
-const detailMvpShapeScreenshot = getScreenshot("detail-mvp-shape");
-const detailNotesScreenshot = getScreenshot("detail-notes");
 import {
   Sheet,
   SheetContent,
@@ -143,27 +123,23 @@ const howItWorks = [
 
 const testimonials = [
   {
-    quote: "Vault turned my shower thoughts into a shipped product. The AI scoring saved me months of building the wrong thing.",
-    author: "Sarah Chen",
-    role: "Indie Hacker",
-    avatar: "SC",
+    quote: "This is exactly the tool I wish I had when I was drowning in half-baked ideas. The AI scoring alone would save months of chasing the wrong thing.",
+    author: "Startup Leader",
+    role: "Series A Founder",
+    avatar: "SL",
   },
   {
-    quote: "I used to lose ideas in random notes apps. Now everything lives in Vault and I actually build things.",
-    author: "Marcus Johnson",
-    role: "Startup Founder",
-    avatar: "MJ",
+    quote: "I lose ideas in random notes apps all the time. Something like Vault that actually structures and scores them? That's a game changer.",
+    author: "Product Lead",
+    role: "Series B Product",
+    avatar: "PL",
   },
   {
-    quote: "The idea inbox is genius. I capture raw thoughts at 2am and wake up to structured ideas.",
-    author: "Priya Patel",
-    role: "Product Designer",
-    avatar: "PP",
+    quote: "The idea inbox concept is genius. Capture raw thoughts at 2am and wake up to structured, scored ideas — I'd use this every day.",
+    author: "Design Director",
+    role: "Tech Startup",
+    avatar: "DD",
   },
-];
-
-const companies = [
-  "Vercel", "Supabase", "Linear", "Figma", "Notion", "Stripe", "Railway", "Planetscale"
 ];
 
 const faqs = [
@@ -184,90 +160,6 @@ const faqs = [
     answer: "100%. Your ideas are encrypted and never shared. We take your intellectual property seriously.",
   },
 ];
-
-// Company icon component with simple styled icons
-function CompanyIcon({ name }: { name: string }) {
-  const iconStyle = "w-8 h-8 text-muted-foreground/70";
-  
-  switch (name) {
-    case "Vercel":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L2 19.5h20L12 2z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    case "Supabase":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M13.5 21.5c-.3.4-.9.2-.9-.3V13h7.3c.7 0 1-.8.5-1.3L10.5 2.5c-.3-.4-.9-.2-.9.3V11H2.3c-.7 0-1 .8-.5 1.3l9.9 9.2z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    case "Linear":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    case "Figma":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 24a4 4 0 0 0 4-4v-4H8a4 4 0 0 0 0 8zM4 12a4 4 0 0 1 4-4h4v8H8a4 4 0 0 1-4-4zM4 4a4 4 0 0 1 4-4h4v8H8a4 4 0 0 1-4-4zM12 0h4a4 4 0 0 1 0 8h-4V0zM20 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    case "Notion":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h8v2H8v-2z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    case "Stripe":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    case "Railway":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    case "Planetscale":
-      return (
-        <div className="flex items-center gap-2">
-          <svg className={iconStyle} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm4-8a4 4 0 1 1-4-4 4 4 0 0 1 4 4z" />
-          </svg>
-          <span className="text-muted-foreground/70 font-semibold text-sm">{name}</span>
-        </div>
-      );
-    default:
-      return (
-        <span className="text-muted-foreground/70 font-semibold text-lg">{name}</span>
-      );
-  }
-}
 
 // ============ COMPONENTS ============
 
@@ -320,155 +212,6 @@ function AnimatedTagline() {
   );
 }
 
-const demoViews = [
-  { id: 0, label: "Home", sublabel: "Your idea dashboard", badge: "Dashboard", icon: "home", screenshot: dashboardScreenshot },
-  { id: 1, label: "AI Assistant", sublabel: "Smart ideation help", badge: "AI", icon: "sparkles", screenshot: aiAssistantScreenshot },
-  { id: 2, label: "Progress View", sublabel: "Track your builds", badge: "Progress", icon: "chart", screenshot: progressScreenshot },
-];
-
-const detailViews = [
-  { label: "Overview", sublabel: "Core idea structure", screenshot: detailOverviewScreenshot },
-  { label: "AI Analysis", sublabel: "Scoring & feedback", screenshot: detailAiAnalysisScreenshot },
-  { label: "MVP Shape", sublabel: "Build roadmap", screenshot: detailMvpShapeScreenshot },
-  { label: "Notes", sublabel: "Your annotations", screenshot: detailNotesScreenshot },
-];
-
-function IdeaBankCarousel() {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const getCardStyle = (index: number) => {
-    const diff = index - activeIndex;
-
-    if (diff === 0) {
-      // Center card
-      return {
-        zIndex: 30,
-        scale: 1,
-        x: "0%",
-        opacity: 1,
-      };
-    } else if (diff === -1 || (activeIndex === 0 && index === 2)) {
-      // Left card
-      return {
-        zIndex: 20,
-        scale: 0.85,
-        x: "-60%",
-        opacity: 0.6,
-      };
-    } else if (diff === 1 || (activeIndex === 2 && index === 0)) {
-      // Right card
-      return {
-        zIndex: 20,
-        scale: 0.85,
-        x: "60%",
-        opacity: 0.6,
-      };
-    } else {
-      // Hidden
-      return {
-        zIndex: 10,
-        scale: 0.7,
-        x: diff < 0 ? "-80%" : "80%",
-        opacity: 0,
-      };
-    }
-  };
-
-  return (
-    <div className="relative">
-      {/* Navigation pills */}
-      <div className="flex justify-center gap-2 mb-6">
-        {demoViews.map((view, i) => (
-          <button
-            key={view.id}
-            onClick={() => setActiveIndex(i)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300 ${
-              activeIndex === i
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {view.badge}
-          </button>
-        ))}
-      </div>
-
-      {/* Cards container */}
-      <div className="relative h-[280px] md:h-[380px] lg:h-[420px]">
-        <div className="absolute inset-0 flex items-center justify-center">
-          {demoViews.map((view, i) => {
-            const style = getCardStyle(i);
-            return (
-              <motion.div
-                key={view.id}
-                onClick={() => setActiveIndex(i)}
-                animate={{
-                  scale: style.scale,
-                  x: style.x,
-                  opacity: style.opacity,
-                  zIndex: style.zIndex,
-                }}
-                transition={{
-                  type: "tween",
-                  duration: 0.35,
-                  ease: [0.25, 0.1, 0.25, 1],
-                }}
-                className={`absolute w-[85%] md:w-[55%] lg:w-[45%] aspect-[4/3] cursor-pointer will-change-transform`}
-              >
-                <div className={`w-full h-full rounded-2xl overflow-hidden border-2 bg-card shadow-2xl transition-colors duration-300 ${
-                  activeIndex === i ? "border-primary" : "border-border"
-                }`}>
-                  {/* Screenshot or fallback placeholder */}
-                  {view.screenshot ? (
-                    <img
-                      src={view.screenshot}
-                      alt={view.label}
-                      className="absolute inset-0 w-full h-full object-cover object-top"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-                      <div className="text-center p-6">
-                        <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <Sparkles className="w-7 h-7 md:w-8 md:h-8 text-primary" />
-                        </div>
-                        <div className="text-foreground font-semibold text-base md:text-lg">{view.label}</div>
-                        <div className="text-muted-foreground text-xs md:text-sm mt-1">{view.sublabel}</div>
-                      </div>
-                    </div>
-                  )}
-                  {/* Badge */}
-                  <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm text-foreground text-xs font-medium px-2.5 py-1 rounded-full border border-border">
-                    {view.badge}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Arrow navigation */}
-      <div className="flex justify-center gap-4 mt-4">
-        <button
-          onClick={() => setActiveIndex((prev) => (prev - 1 + demoViews.length) % demoViews.length)}
-          className="p-2 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <span className="text-xs text-muted-foreground self-center">
-          Click cards or use arrows to explore
-        </span>
-        <button
-          onClick={() => setActiveIndex((prev) => (prev + 1) % demoViews.length)}
-          className="p-2 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function PricingSection({ navigate }: { navigate: (path: string) => void }) {
   const [activePlan, setActivePlan] = useState<'free' | 'pro'>('pro');
@@ -1072,60 +815,6 @@ export default function Onboarding() {
         </AnimatedSection>
       </section>
 
-      {/* Idea Bank Section - Visual Demo */}
-      <section id="idea-bank" className="py-10 md:py-16 px-6 overflow-hidden">
-        <AnimatedSection>
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-6 md:mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                Idea Bank
-              </h2>
-              <p className="text-muted-foreground text-base max-w-2xl mx-auto">
-                A glimpse into how Vault transforms your messy ideas into organized, actionable plans
-              </p>
-            </div>
-
-            {/* Interactive Demo Carousel */}
-            <IdeaBankCarousel />
-
-            {/* Idea Detail View - Horizontal Scrollable */}
-            <div className="relative mt-8">
-              <div className="text-sm font-medium text-muted-foreground mb-3 flex items-center justify-center gap-2">
-                <span>Idea Detail View</span>
-                <span className="text-xs text-primary">— Tap to explore →</span>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-3 -mx-6 px-6 snap-x snap-mandatory md:justify-center md:mx-0 md:px-0">
-                {detailViews.map((item, i) => (
-                  <div
-                    key={i}
-                    className="relative rounded-lg overflow-hidden border border-border bg-card w-[200px] md:w-[240px] aspect-[16/10] flex-shrink-0 hover:border-primary/50 transition-colors snap-center"
-                  >
-                    {/* Screenshot or fallback placeholder */}
-                    {item.screenshot ? (
-                      <img
-                        src={item.screenshot}
-                        alt={item.label}
-                        className="absolute inset-0 w-full h-full object-cover object-top"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent flex items-center justify-center">
-                        <div className="text-center p-3">
-                          <div className="text-foreground font-medium text-sm">{item.label}</div>
-                          <div className="text-muted-foreground text-xs mt-0.5">{item.sublabel}</div>
-                        </div>
-                      </div>
-                    )}
-                    <div className="absolute bottom-1.5 right-1.5 bg-primary/10 text-primary text-xs font-medium px-1.5 py-0.5 rounded text-[10px]">
-                      Section {i + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </AnimatedSection>
-      </section>
 
       {/* Features Section (Idea Bank continuation) */}
       <section id="features" className="py-8 md:py-12 px-6 bg-muted/50">
@@ -1247,33 +936,6 @@ export default function Onboarding() {
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className="py-16 md:py-24 px-6 bg-muted/50">
-        <AnimatedSection>
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                Watch it in action
-              </h2>
-              <p className="text-muted-foreground text-base md:text-lg">
-                A quick walkthrough of the Vault experience
-              </p>
-            </div>
-
-            {/* Video Placeholder */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden border border-border bg-card">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <button className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 transition-transform shadow-lg">
-                  <Play className="w-8 h-8 ml-1" />
-                </button>
-              </div>
-              <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-sm text-foreground text-sm font-medium px-3 py-1.5 rounded-lg">
-                Demo coming soon
-              </div>
-            </div>
-          </div>
-        </AnimatedSection>
-      </section>
 
       {/* Why Builders Love Vault Section - Testimonials */}
       <section className="py-12 md:py-20 px-6 relative overflow-hidden">
@@ -1287,7 +949,7 @@ export default function Onboarding() {
                 Why builders <span className="text-primary">(and everyone)</span> love Vault
               </h2>
               <p className="text-muted-foreground text-base max-w-xl mx-auto">
-                Join thousands who've transformed how they capture and build ideas
+                See why builders are excited about Vault
               </p>
             </div>
           </AnimatedSection>
@@ -1329,36 +991,6 @@ export default function Onboarding() {
             ))}
           </div>
 
-          {/* Trusted By Section with Rotating Wheel */}
-          <AnimatedSection>
-            <div className="text-center mt-0">
-              <p className="text-muted-foreground text-base mb-1">
-                Capture ideas. Build faster. Ship more.
-              </p>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-                Trusted by builders at leading companies
-              </p>
-              
-              {/* Rotating Logo Wheel */}
-              <div className="relative h-12 overflow-hidden max-w-3xl mx-auto">
-                {/* Fade edges */}
-                <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10" />
-                <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10" />
-                
-                {/* Scrolling track */}
-                <div className="flex animate-scroll-left">
-                  {[...companies, ...companies].map((company, i) => (
-                    <div
-                      key={`${company}-${i}`}
-                      className="flex-shrink-0 mx-6 flex items-center justify-center h-12"
-                    >
-                      <CompanyIcon name={company} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </AnimatedSection>
         </div>
       </section>
 
