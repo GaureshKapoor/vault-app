@@ -22,24 +22,36 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Check for OAuth callback on mount (only when returning from Google OAuth)
+  // Check for OAuth callback on mount - handles both implicit (hash) and PKCE (code) flows
   useEffect(() => {
     const checkOAuthCallback = async () => {
-      // Only process if this looks like an OAuth callback (has hash with access_token or error)
+      // Implicit flow: hash contains access_token
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const hasOAuthReturn = hashParams.has("access_token") || hashParams.has("error");
+      const hasHashToken = hashParams.has("access_token") || hashParams.has("error");
 
-      if (!hasOAuthReturn) {
-        return; // Not an OAuth callback, don't auto-redirect
+      // PKCE flow: query param contains code
+      const searchParams = new URLSearchParams(window.location.search);
+      const hasCode = searchParams.has("code");
+
+      if (!hasHashToken && !hasCode) {
+        return; // Not an OAuth callback
       }
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // User just completed OAuth, route them appropriately
         handleSuccessfulAuth();
       }
     };
     checkOAuthCallback();
+
+    // Also listen for SIGNED_IN in case PKCE exchange completes asynchronously
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        handleSuccessfulAuth();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSuccessfulAuth = async () => {
