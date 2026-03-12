@@ -296,6 +296,10 @@ export default function Profile() {
   };
 
   const handleLogout = async () => {
+    localStorage.removeItem("vault_chat_history");
+    localStorage.removeItem("vault_generated_ideas");
+    localStorage.removeItem("vault_ai_mode");
+    localStorage.removeItem("vault-inbox-thoughts");
     await supabase.auth.signOut();
     toast({
       title: "Logged out",

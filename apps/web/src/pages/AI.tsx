@@ -293,8 +293,8 @@ function GenerateView() {
     }
   };
 
-  const handleIdeaSaved = (ideaId: string, savedDbId: string) => {
-    updateIdea(ideaId, { savedId: savedDbId });
+  const handleIdeaSaved = (ideaId: string, _savedDbId: string) => {
+    removeIdea(ideaId);
     setEditingIdea(null);
   };
 

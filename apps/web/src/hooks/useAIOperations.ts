@@ -156,7 +156,6 @@ export function useAIOperations() {
   const scoreIdea = async (input: ScoreInput): Promise<ScoreResult | null> => {
     const missingFields: string[] = [];
     if (!input.title) missingFields.push("title");
-    if (!input.category) missingFields.push("category");
     if (!input.description) missingFields.push("1-line description");
     if (!input.core_problem) missingFields.push("core problem");
     if (!input.core_value_proposition) missingFields.push("value proposition");

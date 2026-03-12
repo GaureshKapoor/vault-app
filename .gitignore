@@ -64,3 +64,6 @@ coverage/
 # Misc
 *.pem
 .cache/
+
+# Vite config cache
+apps/web/vite.config.ts.timestamp-*

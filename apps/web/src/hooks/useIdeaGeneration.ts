@@ -39,6 +39,11 @@ interface GenerateOptions {
 
 const STORAGE_KEY = "vault_generated_ideas";
 
+interface StoredIdeas {
+  userId: string;
+  ideas: GeneratedIdea[];
+}
+
 function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -51,6 +56,7 @@ export function useIdeaGeneration() {
   const [ideas, setIdeas] = useState<GeneratedIdea[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Track if component is mounted to avoid state updates after unmount
@@ -62,13 +68,26 @@ export function useIdeaGeneration() {
     };
   }, []);
 
-  // Load ideas from localStorage on mount
+  // Load ideas from localStorage on mount, scoped to current user
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!isMountedRef.current) return;
+      const userId = user?.id ?? null;
+      setCurrentUserId(userId);
+
+      if (!userId) return;
+
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+
       try {
-        const parsed = JSON.parse(saved);
-        const restored = parsed.map((idea: GeneratedIdea) => ({
+        const stored: StoredIdeas = JSON.parse(saved);
+        // Clear if ideas belong to a different user
+        if (stored.userId !== userId) {
+          localStorage.removeItem(STORAGE_KEY);
+          return;
+        }
+        const restored = stored.ideas.map((idea: GeneratedIdea) => ({
           ...idea,
           generatedAt: new Date(idea.generatedAt),
           isAutofilling: false,
@@ -76,19 +95,21 @@ export function useIdeaGeneration() {
         }));
         setIdeas(restored);
       } catch {
-        setIdeas([]);
+        localStorage.removeItem(STORAGE_KEY);
       }
-    }
+    });
   }, []);
 
-  // Save ideas to localStorage when they change
+  // Save ideas to localStorage when they change, tagged with userId
   useEffect(() => {
+    if (!currentUserId) return;
     if (ideas.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas));
+      const stored: StoredIdeas = { userId: currentUserId, ideas };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  }, [ideas]);
+  }, [ideas, currentUserId]);
 
   const generateIdeas = useCallback(async (options: GenerateOptions = {}) => {
     const hasValidSession = await ensureValidSession();
@@ -288,9 +309,8 @@ export function useIdeaGeneration() {
         throw new Error(insertError.message);
       }
 
-      setIdeas(prev => prev.map(i =>
-        i.id === ideaId ? { ...i, savedId: data.id, isSaving: false } : i
-      ));
+      // Remove from generated list — it's now in the DB and visible in /home
+      setIdeas(prev => prev.filter(i => i.id !== ideaId));
 
       toast({
         title: "Idea saved!",

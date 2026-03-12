@@ -5,16 +5,21 @@
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
-// Free models by rate limit (highest to lowest):
-// - meta-llama/llama-3.2-3b-instruct:free  (~200/day, decent quality)
-// - mistralai/mistral-7b-instruct:free     (~200/day, good quality)
-// - qwen/qwen-2.5-72b-instruct:free        (~50/day, very good quality)
-// - google/gemini-2.0-flash-exp:free       (~10-20/day, good quality)
+// Models tried in order — falls back automatically on 429/404
+// Free tier first, paid llama as last resort if all free models rate-limit
+const FREE_MODELS = [
+  "openai/gpt-oss-120b:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "mistralai/mistral-small-3.1-24b-instruct:free",
+  "google/gemma-3-12b-it:free",
+  "meta-llama/llama-3.2-3b-instruct:free",
+  "meta-llama/llama-3.3-70b-instruct", // paid fallback — only hits if all free models 429
+];
+
 //
-// Paid models (when ready):
-// - anthropic/claude-3.5-haiku ($0.25/1M tokens, best value)
+// Other paid options (when ready to switch fully paid):
 // - openai/gpt-4o-mini ($0.15/1M tokens, cheapest)
-const DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+// - anthropic/claude-haiku-4-5 ($0.25/1M tokens, best quality/price)
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -45,25 +50,24 @@ function getApiKey(): string {
 }
 
 /**
- * Get the model to use (from env or default)
+ * Get ordered list of models to try
  */
-function getModel(configModel?: string): string {
-  return configModel || Deno.env.get("AI_MODEL") || DEFAULT_MODEL;
+function getModels(configModel?: string): string[] {
+  const envModel = Deno.env.get("AI_MODEL");
+  if (configModel) return [configModel];
+  if (envModel) return [envModel, ...FREE_MODELS.filter(m => m !== envModel)];
+  return FREE_MODELS;
 }
 
 /**
- * Make a chat completion request to OpenRouter
- * Returns the raw text response
+ * Make a single attempt to the OpenRouter chat completions endpoint
  */
-export async function chatCompletion(
+async function attemptChatCompletion(
+  apiKey: string,
+  model: string,
   messages: ChatMessage[],
-  config: AIClientConfig = {}
-): Promise<string> {
-  const apiKey = getApiKey();
-  const model = getModel(config.model);
-
-  console.log(`AI request: model=${model}, messages=${messages.length}`);
-
+  config: AIClientConfig
+): Promise<{ ok: boolean; status: number; content?: string; errorText?: string }> {
   const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
@@ -82,26 +86,58 @@ export async function chatCompletion(
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`AI error: ${response.status} - ${errorText}`);
-
-    const error: AIError = {
-      status: response.status,
-      message: getErrorMessage(response.status, errorText),
-      retryable: response.status === 429 || response.status >= 500,
-    };
-
-    throw error;
+    return { ok: false, status: response.status, errorText };
   }
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
-
   if (!content) {
-    throw { status: 500, message: "Empty response from AI", retryable: false };
+    return { ok: false, status: 500, errorText: "Empty response from AI" };
   }
 
-  console.log(`AI response received: ${content.length} chars`);
-  return content;
+  return { ok: true, status: 200, content };
+}
+
+/**
+ * Make a chat completion request to OpenRouter
+ * Automatically falls back to next model on 429 or 404
+ */
+export async function chatCompletion(
+  messages: ChatMessage[],
+  config: AIClientConfig = {}
+): Promise<string> {
+  const apiKey = getApiKey();
+  const models = getModels(config.model);
+
+  let lastError: AIError | null = null;
+
+  for (const model of models) {
+    console.log(`AI request: model=${model}, messages=${messages.length}`);
+
+    const result = await attemptChatCompletion(apiKey, model, messages, config);
+
+    if (result.ok && result.content) {
+      console.log(`AI response received from ${model}: ${result.content.length} chars`);
+      return result.content;
+    }
+
+    console.error(`AI error from ${model}: ${result.status} - ${result.errorText}`);
+
+    lastError = {
+      status: result.status!,
+      message: getErrorMessage(result.status!, result.errorText || ""),
+      retryable: result.status === 429 || result.status! >= 500,
+    };
+
+    // Only fall back on rate limit (429) or model not found (404)
+    if (result.status !== 429 && result.status !== 404) {
+      break;
+    }
+
+    console.log(`Falling back from ${model} (${result.status})...`);
+  }
+
+  throw lastError ?? { status: 500, message: "AI request failed", retryable: false };
 }
 
 /**
@@ -143,6 +179,8 @@ function getErrorMessage(status: number, errorText: string): string {
       return "AI service authentication failed";
     case 402:
       return "AI credits exhausted. Please add credits.";
+    case 403:
+      return "AI service access denied. Please check your API key.";
     case 429:
       return "Rate limit exceeded. Please try again in a moment.";
     case 503:
