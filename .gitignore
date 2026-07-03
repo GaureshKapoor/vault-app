@@ -64,6 +64,7 @@ coverage/
 # Misc
 *.pem
 .cache/
+vault-session.md
 
 # Vite config cache
 apps/web/vite.config.ts.timestamp-*
